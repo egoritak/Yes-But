@@ -111,4 +111,23 @@
     box-shadow:0 4px 14px rgb(0 0 0 /.18);animation:slideIn .3s;
     font-size:clamp(.82rem,1vw,.96rem);
   }
+
+  .tableWrapper {
+    position: relative;
+    width: 100%;
+  }
+  #countdownOverlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(2rem, 6vw, 4rem);
+    color: #fff;
+    z-index: 10;
+    pointer-events: none;
+  }
+  .hidden { display: none !important; }
+  
   @keyframes slideIn{from{opacity:0;transform:translateY(-14px)}}  

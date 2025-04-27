@@ -185,17 +185,37 @@ io.on('connection',sock=>{
   });
 
   /* ---- gameplay ---- */
-  sock.on('play_card',({code})=>{
-    const g=rooms.get(code); if(!g||!g.started) return;
-    if(g.players[g.turnIdx].id!==sock.id) return;
-    const pl=g.player(sock.id); if(!pl.hand.length) return;
+  sock.on('play_card', ({ code }) => {
+    const g = rooms.get(code); if (!g || !g.started) return;
+    if (!g || !g.started) return;
+    if (g.players[g.turnIdx].id !== sock.id) return;
+    const pl = g.player(sock.id);
+    if (!pl.hand.length) return;
 
-    const card=pl.hand.shift();
-    g.table.push({...card,owner:sock.id,taken:false});
-    g.revealed=g.table.length===g.players.length;
+    // 1) сыграли карту
+    const card = pl.hand.shift();
+    g.table.push({ ...card, owner: sock.id, taken: false });
+    const allPlayed = g.table.length === g.players.length;
+
+    // 2) сразу отдаем текущее состояние (карты всё ещё закрыты)
     g.emitState();
-    if(g.revealed) g.room().emit('reveal');
-    g.nextTurn();
+
+    if (allPlayed) {
+      // начинаем отсчет (N секунд)
+      const N = 3; // или любое другое время
+      g.room().emit('start_countdown', { seconds: N });
+
+      // через N секунд раскрываем карты и передаём ход
+      setTimeout(() => {
+        g.revealed = true;
+        g.room().emit('reveal');
+        g.emitState();
+        g.nextTurn();
+      }, N * 1000);
+    } else {
+      // если не все выложили — сразу переход хода
+      g.nextTurn();
+    }
   });
 
   sock.on('claim_card',({code,cardId})=>{

@@ -155,6 +155,36 @@ function clearSel(){
   selecting=[];
 }
 
+const overlay = document.getElementById('countdownOverlay');
+let countdownInterval;
+
+// старт отсчёта
+s.on('start_countdown', ({seconds}) => {
+  overlay.textContent = seconds;
+  overlay.classList.remove('hidden');
+
+  let t = seconds;
+  clearInterval(countdownInterval);
+  countdownInterval = setInterval(() => {
+    t--;
+    if (t > 0) {
+      overlay.textContent = t;
+    } else {
+      clearInterval(countdownInterval);
+      overlay.classList.add('hidden');
+    }
+  }, 1000);
+});
+
+// на событие reveal оверлей уже скрыт в setTimeout,
+// но подстрахуем
+s.on('reveal', () => {
+  clearInterval(countdownInterval);
+  overlay.classList.add('hidden');
+  // ваш существующий toast или прочие реакции
+  toast('Карты вскрыты! Быстрее кликай.');
+});
+
 /* ───── вспомогательные уведомления ───── */
 s.on('reveal', ()=>toast('Карты вскрыты','#0ea5e9'));
 s.on('card_claimed',({cardId,byName})=>{
