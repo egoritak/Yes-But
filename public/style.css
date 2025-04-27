@@ -283,7 +283,7 @@ body {
 
 .card {
     width: 110px;
-    height: 150px;
+    height: 200px;
     /* одинаковый размер */
     display: flex;
     align-items: center;
