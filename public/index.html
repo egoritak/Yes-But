@@ -1,32 +1,44 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Да/Но – игра</title>
-<link rel="stylesheet" href="style.css">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Да / Но — онлайн-партия</title>
+
+<link rel="stylesheet" href="style.css" />
 </head>
 <body>
-<h1>Игра «Да / Но»</h1>
 
-<!-- экран подключения -->
-<div id="join">
-  <input id="room" placeholder="компания / room">
-  <input id="name" placeholder="ваше имя">
-  <button id="joinBtn">Войти</button>
-</div>
+<!-- ── Welcome ─────────────────────────────────────────────── -->
+<section id="lobby" class="panel">
+  <img src="https://i.imgur.com/a2y4mql.png" alt="Yes / But" class="logo" />
+  <input id="room" class="input" placeholder="компания / room" />
+  <input id="name" class="input" placeholder="ваше имя" />
+  <button id="joinBtn" class="btn primary">Начать</button>
+</section>
 
-<!-- игровой экран -->
-<div id="game" hidden>
-  <p id="info"></p>
-  <div id="hand"></div>
-  <button id="playBtn">Выложить левую</button>
-  <button id="pairBtn">Составить пару</button>
+<!-- ── Game ────────────────────────────────────────────────── -->
+<section id="game" class="panel hidden">
+  <header id="playersBar" class="players"></header>
 
-  <h3>Стол</h3>
-  <div id="table"></div>
-</div>
+  <p id="info" class="info"></p>
+
+  <div class="controls">
+    <button id="playBtn" class="btn green">Выложить левую</button>
+    <button id="pairBtn" class="btn amber">Составить пару</button>
+  </div>
+
+  <h3 class="subtitle">Ваша рука</h3>
+  <div id="hand"  class="cards"></div>
+
+  <h3 class="subtitle">Стол</h3>
+  <div id="table" class="cards table"></div>
+</section>
+
+<!-- ── Toast container ─────────────────────────────────────── -->
+<div id="toastArea"></div>
 
 <script src="/socket.io/socket.io.js"></script>
-<script src="app.js"></script>
+<script type="module" src="app.js"></script>
 </body>
 </html>

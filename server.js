@@ -137,7 +137,7 @@ io.on('connection',sock=>{
     }
     // добрать до 2
     while(pl.hand.length<2) g.deal(pl);
-    g.nextTurn();
+    g.emitState();
   });
 
   /* -------- выход -------- */

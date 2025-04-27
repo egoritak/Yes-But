@@ -1,105 +1,114 @@
-const s = io();
+const ioSock = io();
 
-/* DOM */
-const el = {
-  join     : document.getElementById('join'),
-  room     : document.getElementById('room'),
-  name     : document.getElementById('name'),
-  joinBtn  : document.getElementById('joinBtn'),
-  game     : document.getElementById('game'),
-  info     : document.getElementById('info'),
-  handCont : document.getElementById('hand'),
-  playBtn  : document.getElementById('playBtn'),
-  pairBtn  : document.getElementById('pairBtn'),
-  table    : document.getElementById('table')
-};
+/* ========== DOM helpers ========== */
+const $ = id => document.getElementById(id);
+const lobby = $('lobby'), game = $('game');
+const roomIn = $('room'), nameIn = $('name'), joinBtn=$('joinBtn');
+const infoP = $('info'), playBtn=$('playBtn'), pairBtn=$('pairBtn');
+const handDiv=$('hand'), tableDiv=$('table'), bar=$('playersBar');
+const toastArea=$('toastArea');
 
-let roomId='', myId='', activeId='', names={}, hand=[];
-let select=[];
+/* ========== state ========== */
+let room='', myId='', active='', nameMap={}, hand=[];
+let selecting=[];
 
-/* ---------- подключение ---------- */
-el.joinBtn.onclick=()=>{
-  roomId = el.room.value.trim(); if(!roomId) return;
-  s.emit('join',{roomId,name: el.name.value.trim()});
-  el.join.hidden=true; el.game.hidden=false;
-};
-
-/* ---------- отрисовка руки ---------- */
-s.on('hand', cards=>{
-  hand=cards;
-  el.handCont.innerHTML='';
-  cards.forEach(c=>{
-    const d=document.createElement('div');
-    d.className='card '+c.type;
-    d.textContent=(c.type==='YES'?'Да: ':'Но: ')+c.text;
-    d.dataset.id=c.id;
-    d.onclick=()=>chooseForPair(c.id);
-    el.handCont.appendChild(d);
-  });
-});
-
-/* ---------- состояние комнаты ---------- */
-s.on('state', st=>{
-  myId ||= s.id;
-  activeId = st.active;
-  names = Object.fromEntries(st.players.map(p=>[p.id,p.name]));
-
-  el.info.textContent = (activeId===myId)
-      ? 'Ваш ход'
-      : `Ход игрока ${names[activeId]}`;
-
-  // стол
-  el.table.innerHTML='';
-  st.table.forEach(c=>{
-    const d=document.createElement('div');
-    d.className='card '+c.type;
-    d.textContent=(c.text==='???'?'?':(c.type==='YES'?'Да: ':'Но: ')+c.text);
-    d.dataset.id=c.id;
-    d.onclick=()=>s.emit('claim_card',{roomId,cardId:c.id});
-    el.table.appendChild(d);
-  });
-
-  const myTurn = (activeId===myId);
-  el.playBtn.disabled=!myTurn;
-  el.pairBtn.disabled=!myTurn;
-});
-
-/* ---------- кнопки ---------- */
-el.playBtn.onclick = ()=> s.emit('play_card',{roomId});
-el.pairBtn.onclick = ()=> alert('Кликните по «Да» и «Но» в руке');
-
-/* ---------- выбор пары ---------- */
-function chooseForPair(id){
-  if(activeId!==myId) return;
-  if(select.includes(id)) return;
-  select.push(id);
-  document.querySelector(`[data-id="${id}"]`).style.outline='2px solid #007bff';
-  if(select.length===2){
-    const y=select.find(i=>i.startsWith('Y')), n=select.find(i=>i.startsWith('N'));
-    if(y&&n) s.emit('make_pair',{roomId,yesId:y,noId:n});
-    select.forEach(i=>{
-      const el=document.querySelector(`[data-id="${i}"]`);
-      if(el) el.style.outline='';
-    });
-    select=[];
-  }
+/* ========== toast ========== */
+function toast(msg,color='#334155'){
+  const el=document.createElement('div');
+  el.className='toast'; el.style.background=color; el.textContent=msg;
+  toastArea.appendChild(el);
+  setTimeout(()=>el.remove(),2500);
 }
 
-/* ---------- всплывашки ---------- */
-s.on('reveal', ()=> alert('Карты вскрыты! Быстро выбирай карту на столе.'));
-s.on('card_claimed',({cardId,byName})=>{
-  const el = document.querySelector(`[data-id="${cardId}"]`);
+function clearSelection() {
+  selecting.forEach(id => {
+    const el = document.querySelector(`[data-id="${id}"]`);
+    if (el) el.style.outline = '';
+  });
+  selecting = [];
+}
+
+/* ========== renderers ========== */
+function renderPlayers(list){
+  bar.innerHTML='';
+  list.forEach(p=>{
+    const box=document.createElement('div');
+    box.className='playerBox';
+    box.innerHTML=`<div class="avatar ${p.id===active?'turn':''}">
+                     ${p.name[0].toUpperCase()}</div>
+                   <div>${p.name}</div>
+                   <div>${p.score} пар</div>`;
+    bar.appendChild(box);
+  });
+}
+
+function cardMarkup(c, {hidden=false, showTaken=true} = {}){
+  const takenCls = showTaken && c.taken ? ' taken' : '';
+  const txt = hidden ? '???' : `${c.type==='YES'?'Да':'Но'}: ${c.text}`;
+  return `<div class="card ${c.type}${takenCls}" data-id="${c.id}">${txt}</div>`;
+}
+
+/* ── join ── */
+joinBtn.onclick=()=>{
+  room=roomIn.value.trim(); if(!room) return;
+  ioSock.emit('join',{roomId:room,name:nameIn.value.trim()});
+  lobby.classList.add('hidden'); game.classList.remove('hidden');
+};
+
+/* ── server events ── */
+ioSock.on('hand', cards=>{
+  hand=cards;
+  handDiv.innerHTML = cards.map(c=>cardMarkup(c,{showTaken:false})).join('');
+  handDiv.querySelectorAll('.card').forEach(el=>{
+    el.onclick=()=>choose(el.dataset.id);
+  });
+});
+
+ioSock.on('state', s=>{
+  myId ||= ioSock.id;
+  active = s.active;
+  nameMap = Object.fromEntries(s.players.map(p=>[p.id,p.name]));
+
+  infoP.textContent = active===myId ? 'Ваш ход' : `Ход игрока ${nameMap[active]}`;
+  if(active!==myId) clearSelection();
+  renderPlayers(s.players);
+
+  tableDiv.innerHTML = s.table.map(c=>cardMarkup(c,{hidden:c.text==='???',showTaken:true})).join('');
+  tableDiv.querySelectorAll('.card').forEach(el=>{
+    el.onclick=()=>ioSock.emit('claim_card',{roomId:room,cardId:el.dataset.id});
+  });
+
+  const myTurn=(active===myId);
+  playBtn.disabled=!myTurn; pairBtn.disabled=!myTurn;
+});
+
+ioSock.on('reveal', ()=>toast('Карты вскрыты! Лови свою.','#0ea5e9'));
+ioSock.on('card_claimed',({cardId,byName})=>{
+  const el=tableDiv.querySelector(`[data-id="${cardId}"]`);
   if(el) el.classList.add('taken');
+  toast(`${byName} забрал карту`);
 });
-s.on('pair_attempt',({byName,yes,no})=>{
-  alert(`${byName} пытается составить пару:\n${yes.text}\n${no.text}`);
-});
-s.on('pair_success',({byName,score})=>{
-  alert(`${byName} собрал пару! Счёт: ${score}`);
-});
-s.on('pair_fail',({byName})=>{
-  alert(`${byName} ошибся – карты вернулись в колоду`);
-});
-s.on('game_over',({winnerName})=>{
-  alert(`${winnerName} победил! Игра начинается заново.`);
-});
+ioSock.on('pair_attempt',({byName})=>toast(`${byName} пытается составить пару…`,'#f59e0b'));
+ioSock.on('pair_success',({byName,score})=>toast(`${byName}: пара собрана (${score})`,'#22c55e'));
+ioSock.on('pair_fail',({byName})=>toast(`${byName} ошибся с парой`,'#ef4444'));
+ioSock.on('game_over',({winnerName})=>toast(`${winnerName} победил! Начинаем заново`,'#6366f1'));
+
+/* ── actions ── */
+playBtn.onclick = () => {
+  clearSelection();                       // 💧 убрать контур
+  ioSock.emit('play_card', { roomId: room });
+};
+pairBtn.onclick = ()=>toast('Кликните по «Да» и «Но» в руке','#f59e0b');
+
+function choose(id){
+  if(active!==myId) return;
+  if(selecting.includes(id)) return;
+  selecting.push(id);
+  document.querySelector(`[data-id="${id}"]`).style.outline='3px solid #2563eb';
+  if(selecting.length===2){
+    const y=selecting.find(x=>x.startsWith('Y')), n=selecting.find(x=>x.startsWith('N'));
+    if(y&&n) ioSock.emit('make_pair',{roomId:room,yesId:y,noId:n});
+    clearSelection();
+    selecting=[];
+  }
+}
