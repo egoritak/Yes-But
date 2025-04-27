@@ -324,28 +324,58 @@ h3.subtitle {
     display: none !important;
 }
 
-/* pairOverlay — полупрозрачный фон и центрированная пара */
+/* контейнер оверлея: центрируем всё по вертикали/горизонтали */
 #pairOverlay {
     position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.7);
+    inset: 0;
+    background: rgba(0,0,0,0.75);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 50;
   }
-  #pairOverlay.hidden { display: none; }
-  
-  .pairBox {
-    display: flex;
-    gap: 1.5rem;
+  #pairOverlay.hidden { display: none !important; }
+
+  /* подпись над карточками */
+.pairInfo {
+    font-size: clamp(1.2rem,3vw,1.8rem);
+    font-weight: 600;
+    color: #fff;
+    text-align: center;
   }
-  .card.large {
-    width: clamp(120px,15vw,240px);
-    height: clamp(180px,22vw,360px);
+
+  /* внутренняя обёртка, чтоб не растягивалось на весь экран */
+.pairContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(0.8rem,2vw,1.2rem);
+  }
+  
+
+/* контейнер для двух карточек */
+.pairBox {
+    display: flex;
+    gap: clamp(1rem,2.5vw,2rem);
+  }
+  
+
+/* карточки увеличены, рамки уже цветятся по YES/NO */
+.card.large {
+    width: clamp(120px,16vw,260px);
+    height: clamp(180px,24vw,360px);
     border-width: 6px !important;
   }
-  
+
+/* текст результата под карточками */
+.pairResult {
+    font-size: clamp(1.5rem,4vw,2.4rem);
+    font-weight: bold;
+    text-align: center;
+    color: var(--c-txt);
+  }
+
+
 
 @keyframes slideIn {
     from {
