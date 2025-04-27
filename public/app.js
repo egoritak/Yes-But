@@ -118,6 +118,8 @@ s.on('state', st=>{
     el.onclick = () => s.emit('claim_card',{code:room,cardId:el.dataset.id});
   });
 
+  $('deckLeft').textContent = `В колоде – ${st.left} карт`;
+
   const myTurn = active===myId;
   playBt.disabled = !myTurn;
   pairBt.disabled = !myTurn;
