@@ -140,7 +140,8 @@ class Game{
       active :this.players[this.turnIdx]?.id,
       table  :this.revealed ? this.table
                             : this.table.map(c=>({...c,text:'???'})),
-      left   :this.left
+      left   :this.left,
+      revealed: this.revealed
     });
     this.players.forEach(p=> io.to(p.id).emit('hand',p.hand));
   }
@@ -193,6 +194,7 @@ io.on('connection',sock=>{
     if (g.players[g.turnIdx].id !== sock.id) return;
     const pl = g.player(sock.id);
     if (!pl.hand.length) return;
+    if (g.revealed || g.table.length >= g.players.length) return;
 
     // 1) сыграли карту
     const card = pl.hand.shift();
@@ -212,7 +214,7 @@ io.on('connection',sock=>{
         g.revealed = true;
         g.room().emit('reveal');
         g.emitState();
-        g.nextTurn();
+        //g.nextTurn();
       }, N * 1000);
     } else {
       // если не все выложили — сразу переход хода
@@ -230,16 +232,21 @@ io.on('connection',sock=>{
     g.room().emit('card_claimed',{cardId,byName:pl.name});
 
     const done=g.table.every(c=>c.taken)||g.players.every(p=>p.claimed);
-    if(done){
-      g.players.forEach(p=>{p.claimed=false;g.deal(p);});
-      g.table=[];g.revealed=false;g.emitState();
-    }
+      if (done){
+          g.players.forEach(p=>{p.claimed=false; g.deal(p);});
+          g.table=[]; g.revealed=false;
+          g.nextTurn();                      // ← теперь меняем ход
+          g.emitState();
+      }
   });
 
   sock.on('make_pair',({code,yesId,noId})=>{
     const g=rooms.get(code); if(!g||!g.started) return;
     if(g.players[g.turnIdx].id!==sock.id) return;
     const pl=g.player(sock.id);
+
+    const tableFull = g.table.length >= g.players.length;
+    if (g.revealed || tableFull) return;
 
     const yi=pl.hand.findIndex(c=>c.id===yesId&&c.type===YES);
     const ni=pl.hand.findIndex(c=>c.id===noId &&c.type===NO );

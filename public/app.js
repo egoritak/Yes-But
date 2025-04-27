@@ -77,24 +77,24 @@ s.on('pair_reveal', ({byName, yes, no}) => {
   pairOverlay.classList.remove('hidden');
 });
 
-// 2) При успехе — показываем “Успех!”, ждём 1 секунду, затем прячем и toast
+// 2) При успехе — показываем “Успех!”, ждём 2 секундs, затем прячем и toast
 s.on('pair_success', ({byName, score}) => {
   pairResultEl.textContent = 'Успех!';
   pairResultEl.style.color = 'var(--c-green)';
   setTimeout(() => {
     pairOverlay.classList.add('hidden');
     toast(`${byName} правильно составил пару! (${score})`, '#22c55e');
-  }, 1000);
+  }, 2000);
 });
 
-// 3) При провале — показываем “Провал!”, ждём 1 секунду, затем прячем и toast
+// 3) При провале — показываем “Провал!”, ждём 2 секундs, затем прячем и toast
 s.on('pair_fail', ({byName}) => {
   pairResultEl.textContent = 'Провал!';
   pairResultEl.style.color = 'var(--c-red)';
   setTimeout(() => {
     pairOverlay.classList.add('hidden');
     toast(`${byName} ошибся с парой`, '#ef4444');
-  }, 1000);
+  }, 2000);
 });
 
 /* ───── lobby events ───── */
@@ -154,10 +154,14 @@ s.on('state', st=>{
 
   $('deckLeft').textContent = `В колоде – ${st.left} карт`;
 
-  const myTurn = active===myId;
-  playBt.disabled = !myTurn;
-  pairBt.disabled = !myTurn;
-  if(!myTurn) clearSel();
+  const myTurn = active === myId;
+  const tableFull = st.table.length >= st.players.length;
+  const canPlay = myTurn && !st.revealed && !tableFull;
+  const canPair = myTurn && !st.revealed && !tableFull;
+
+  playBt.disabled = !canPlay;
+  pairBt.disabled = !canPair;
+  if (!myTurn) clearSel();
 });
 
 s.on('hand', cards=>{
@@ -207,7 +211,7 @@ s.on('start_countdown', ({seconds}) => {
       clearInterval(countdownInterval);
       overlay.classList.add('hidden');
     }
-  }, 1000);
+  }, 2000);
 });
 
 // на событие reveal оверлей уже скрыт в setTimeout,
