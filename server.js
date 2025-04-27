@@ -22,6 +22,21 @@ const shuffle = a =>{
   }
 };
 
+// вверху server.js
+const ALL_PAIRS = (() => {
+  const dir = path.join(__dirname,'public','cards');
+  const g={};                               // {'001':{Y:'001_Y.png',B:'001_B.png'}}
+  fs.readdirSync(dir).forEach(f=>{
+    const m = f.match(/^(\d+)_([YB])\.(png|jpg|jpeg|webp)$/i);
+    if (!m) return;
+    const [, id, k] = m;
+    (g[id] = g[id] || {})[k] = f;
+  });
+  return Object.entries(g)                  // массив только полных пар
+               .filter(([,o])=>o.Y && o.B)  // [['001',{Y:'..',B:'..'}],…]
+               .map(([id,o]) => ({ id, Y:o.Y, B:o.B }));
+})();                                        // ALL_PAIRS.length может быть 50–100…
+
 /* ── читаем ВСЕ картинки один раз при запуске ── */
 const MASTER_PAIRS = (() => {
   const dir = path.join(__dirname,'public','cards');
@@ -46,6 +61,21 @@ class Game{
     this.removed=new Set();
     this.turnIdx=0; this.table=[]; this.revealed=false;
     this.buildDeck();
+  }
+
+  startRound() {                            // вызываем из 'start_game' и resetParty()
+    const need = 3 * this.players.length + 1;            // 3 N + 1
+    const shuffled = [...ALL_PAIRS];
+    shuffle(shuffled);
+    const picked   = shuffled.slice(0, need);            // ровно нужное число пар
+
+    this.deck = [];                                     // кладём обе половинки
+    picked.forEach(p=>{
+      this.deck.push({id:`Y${p.id}`,type:YES,file:p.Y,pair:p.id});
+      this.deck.push({id:`N${p.id}`,type:NO ,file:p.B,pair:p.id});
+    });
+    shuffle(this.deck);
+    this.left = this.deck.length;
   }
 
   buildDeck(){
@@ -115,7 +145,7 @@ class Game{
 
   resetParty(){
     this.turnIdx=0; this.table=[]; this.revealed=false; this.removed=new Set();
-    this.buildDeck();
+    this.startRound();
     this.players.forEach(p=>{p.hand=[];p.score=0;p.claimed=false;this.deal(p,2);});
     this.emitState();
   }
@@ -149,6 +179,7 @@ io.on('connection',sock=>{
     const g=rooms.get(code);
     if(!g||g.started||g.admin!==sock.id) return;
     g.started=true;
+    g.startRound();
     g.players.forEach(p=>g.deal(p,2));
     g.emitState();
   });
