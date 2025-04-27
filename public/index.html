@@ -3,44 +3,39 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Да / Но – онлайн-партия</title>
+<title>Да / Но — браузерная игра</title>
 
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<!-- ▸ Landing: создание / подключение -------------------------------- -->
+<!-- ── Landing ─────────────────────────────────────────────── -->
 <section id="landing" class="panel">
   <h1 class="logoTxt">Да / Но</h1>
 
-  <div class="box">
-    <h3>Создать комнату</h3>
-    <input id="creatorName" class="input" placeholder="Ваше имя" />
-    <button id="btnCreate" class="btn primary">Создать</button>
+  <input id="userName" class="input wide" placeholder="Ваше имя *" />
+
+  <div class="codeRow">
+    <input id="codeInput" class="input short uc" maxlength="4" placeholder="Код (XXXX)" />
+    <button id="joinBtn" class="btn green" disabled>Подключиться</button>
   </div>
 
-  <div class="box">
-    <h3>Подключиться</h3>
-    <input id="joinCode"  class="input" placeholder="код комнаты" />
-    <input id="joinName"  class="input" placeholder="Ваше имя" />
-    <button id="btnJoin"   class="btn green">Подключиться</button>
-  </div>
+  <button id="createBtn" class="btn primary w-full" disabled>Создать новую комнату</button>
 </section>
 
-<!-- ▸ Lobby: ждём игроков -------------------------------------------- -->
+<!-- ── Lobby ───────────────────────────────────────────────── -->
 <section id="lobby" class="panel hidden">
   <p>Код комнаты: <strong id="roomCode"></strong>
      <button id="copyBtn" class="btn tiny">📋</button></p>
 
-  <h3>Игроки в комнате</h3>
+  <h3>Участники</h3>
   <ul id="playersList"></ul>
 
-  <button id="btnStart" class="btn amber hidden">Начать игру</button>
+  <button id="startBtn" class="btn amber hidden">Начать игру</button>
 </section>
 
-<!-- ▸ Game UI --------------------------------------------------------- -->
+<!-- ── Game UI (без изменений) ─────────────────────────────── -->
 <section id="game" class="panel hidden">
-
   <header id="playersBar" class="players"></header>
   <p id="info" class="info"></p>
 
@@ -56,7 +51,6 @@
   <div id="table" class="cards table"></div>
 </section>
 
-<!-- ▸ Toast контейнер ------------------------------------------------- -->
 <div id="toastArea"></div>
 
 <script src="/socket.io/socket.io.js"></script>
