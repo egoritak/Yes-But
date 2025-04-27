@@ -1,124 +1,315 @@
 /* ─── базовые цвета ───────────────────────────────────────── */
-:root{
-    --c-bg:#f3f4f6;         --c-bg-dark:#1f2937;
-    --c-card:#ffffff;       --c-card-dark:#374151;
-    --c-border:#cbd5e1;
-    --c-txt:#1e293b;        --c-txt-dark:#e2e8f0;
-  
-    --c-green:#22c55e;      /* насыщеннее рамка Да */
-    --c-red:#ef4444;        /* насыщеннее рамка Нет */
-    --c-blue:#2563eb;       --c-amber:#f59e0b;
-  }
-  
-  /* dark-mode */
-  @media (prefers-color-scheme:dark){
-    body{background:var(--c-bg-dark);color:var(--c-txt-dark);}
-    .panel{background:#111827;}
-    .card{background:var(--c-card-dark);}
-    .input{background:#374151;color:var(--c-txt-dark);}
-  }
-  
-  *{box-sizing:border-box;margin:0;padding:0}
-  
-  /* ─── базовый flex-центр страницы ─────────────────────────── */
-  body{
-    display:flex;flex-direction:column;justify-content:center;align-items:center;
-    min-height:100vh;padding:2vh 1vw;background:var(--c-bg);color:var(--c-txt);
-    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-  }
-  
-  .hidden{display:none!important}
-  
-  /* ─── панели (landing / lobby / game) ─────────────────────── */
-  .panel{
-    width:90vw; max-width:1200px;
-    background:var(--c-card);border:1px solid var(--c-border);border-radius:16px;
-    padding:clamp(1rem,2.4vw,3rem);
-    box-shadow:0 6px 20px rgb(0 0 0 /.08);
-    display:flex;flex-direction:column;align-items:center;gap:clamp(1rem,1.8vw,1.6rem);
-    animation:fadeIn .4s;overflow:auto;        /* прокрутка на малых экранах */
-  }
-  @keyframes fadeIn{from{opacity:0;transform:translateY(12px)}}
-  
-  .logoTxt{font-size:clamp(1.8rem,4.3vw,2.8rem);margin-bottom:.6em}
-  
-  /* ─── формы и кнопки ───────────────────────────────────────── */
-  .input{
-    width:100%;padding:.75em 1em;font-size:clamp(.95rem,1.1vw,1.15rem);
-    border:1px solid var(--c-border);border-radius:10px;margin:.45em 0;
-  }
-  .input.short{text-align:center;letter-spacing:.1em}
-  
-  .btn{
-    padding:.75em 1.4em;font-size:clamp(.95rem,1.15vw,1.2rem);
-    border:0;border-radius:10px;color:#fff;cursor:pointer;margin:.4em;
-    transition:transform .12s,box-shadow .12s,opacity .2s;
-  }
-  .btn:hover:not(:disabled){transform:translateY(-3px);box-shadow:0 5px 12px rgb(0 0 0 /.18)}
-  .btn:disabled{opacity:.35;cursor:not-allowed}
-  .primary{background:var(--c-blue);}  .green{background:var(--c-green);}  .amber{background:var(--c-amber);}
-  .btn.tiny{padding:.35em .8em;font-size:.78rem}
-  
-  /* ─── player-bar ───────────────────────────────────────────── */
-  .players{display:flex;flex-wrap:wrap;gap:clamp(.9rem,1.6vw,1.4rem);justify-content:center;width:100%}
-  .avatar{
-    width:clamp(56px,6.5vw,80px);height:clamp(56px,6.5vw,80px);
-    background:var(--c-blue);color:#fff;border-radius:50%;
-    display:grid;place-content:center;font-weight:700;font-size:clamp(1.05rem,1.55vw,1.35rem);
-    box-shadow:0 0 0 3px #fff;
-  }
-  .turn{box-shadow:0 0 0 4px var(--c-amber)!important}
-  .playerBox{text-align:center;font-size:.8rem;line-height:1.15}
-  
-  /* ─── карточки ─────────────────────────────────────────────── */
-  /* ширина ~12% окна, но 100-180 px */
-  .card{
-    width:clamp(100px,12vw,180px);height:clamp(150px,18vw,260px);
-    background:var(--c-card);border:4px solid transparent;border-radius:14px;
-    overflow:hidden;display:flex;align-items:center;justify-content:center;
-    cursor:pointer;user-select:none;transition:transform .15s;
-  }
-  .card:hover{transform:translateY(-5px)}
-  .card:active{transform:translateY(-2px)}
-  .card img{width:100%;height:100%;object-fit:cover}
-  .YES{border-color:var(--c-green);}
-  .NO {border-color:var(--c-red);}
-  .taken{opacity:.3;pointer-events:none;transform:none!important}
-  
-  /* контейнеры карт */
-  .cards{display:flex;flex-wrap:wrap;gap:.7rem;justify-content:center}
-  .table{
-    max-height:60vh;                    /* раньше 230px → больше места */
-    overflow-y:auto;padding:.7rem;
-    background:#ffffff0d;border-radius:10px;width:100%;
-  }
-  @media (max-width:700px){ .table{max-height:45vh;} }  /* мобильный */
-  
-  /* ─── текст / прочее ───────────────────────────────────────── */
-  h3.subtitle{font-size:clamp(1.1rem,1.7vw,1.35rem);margin:1.3rem 0 .5rem}
-  .info{font-weight:600;font-size:clamp(1rem,1.45vw,1.25rem);text-align:center;margin-bottom:.7rem}
-  .controls{display:flex;flex-wrap:wrap;justify-content:center}
-  
-  .deckCnt{margin-top:.5rem;font-size:.9rem;opacity:.7}
-  
-  /* ─── toast ────────────────────────────────────────────────── */
-  #toastArea{
-    position:fixed;top:1.4rem;left:50%;transform:translateX(-50%);
-    z-index:9999;display:flex;flex-direction:column;gap:.7rem;
-  }
-  .toast{
-    background:#334155;color:#fff;padding:.65em 1.3em;border-radius:10px;
-    box-shadow:0 4px 14px rgb(0 0 0 /.18);animation:slideIn .3s;
-    font-size:clamp(.82rem,1vw,.96rem);
-  }
+:root {
+    --c-bg: #f3f4f6;
+    --c-bg-dark: #1f2937;
+    --c-card: #ffffff;
+    --c-card-dark: #374151;
+    --c-border: #cbd5e1;
+    --c-txt: #1e293b;
+    --c-txt-dark: #e2e8f0;
 
-  .tableWrapper {
+    --c-green: #22c55e;
+    /* насыщеннее рамка Да */
+    --c-red: #ef4444;
+    /* насыщеннее рамка Нет */
+    --c-blue: #2563eb;
+    --c-amber: #f59e0b;
+}
+
+/* dark-mode */
+@media (prefers-color-scheme:dark) {
+    body {
+        background: var(--c-bg-dark);
+        color: var(--c-txt-dark);
+    }
+
+    .panel {
+        background: #111827;
+    }
+
+    .card {
+        background: var(--c-card-dark);
+    }
+
+    .input {
+        background: #374151;
+        color: var(--c-txt-dark);
+    }
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0
+}
+
+/* ─── базовый flex-центр страницы ─────────────────────────── */
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 2vh 1vw;
+    background: var(--c-bg);
+    color: var(--c-txt);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.hidden {
+    display: none !important
+}
+
+/* ─── панели (landing / lobby / game) ─────────────────────── */
+.panel {
+    width: 90vw;
+    max-width: 1200px;
+    background: var(--c-card);
+    border: 1px solid var(--c-border);
+    border-radius: 16px;
+    padding: clamp(1rem, 2.4vw, 3rem);
+    box-shadow: 0 6px 20px rgb(0 0 0 /.08);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: clamp(1rem, 1.8vw, 1.6rem);
+    animation: fadeIn .4s;
+    overflow: auto;
+    /* прокрутка на малых экранах */
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(12px)
+    }
+}
+
+.logoTxt {
+    font-size: clamp(1.8rem, 4.3vw, 2.8rem);
+    margin-bottom: .6em
+}
+
+/* ─── формы и кнопки ───────────────────────────────────────── */
+.input {
+    width: 100%;
+    padding: .75em 1em;
+    font-size: clamp(.95rem, 1.1vw, 1.15rem);
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    margin: .45em 0;
+}
+
+.input.short {
+    text-align: center;
+    letter-spacing: .1em
+}
+
+.btn {
+    padding: .75em 1.4em;
+    font-size: clamp(.95rem, 1.15vw, 1.2rem);
+    border: 0;
+    border-radius: 10px;
+    color: #fff;
+    cursor: pointer;
+    margin: .4em;
+    transition: transform .12s, box-shadow .12s, opacity .2s;
+}
+
+.btn:hover:not(:disabled) {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 12px rgb(0 0 0 /.18)
+}
+
+.btn:disabled {
+    opacity: .35;
+    cursor: not-allowed
+}
+
+.primary {
+    background: var(--c-blue);
+}
+
+.green {
+    background: var(--c-green);
+}
+
+.amber {
+    background: var(--c-amber);
+}
+
+.btn.tiny {
+    padding: .35em .8em;
+    font-size: .78rem
+}
+
+/* ─── player-bar ───────────────────────────────────────────── */
+.players {
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(.9rem, 1.6vw, 1.4rem);
+    justify-content: center;
+    width: 100%
+}
+
+.avatar {
+    width: clamp(56px, 6.5vw, 80px);
+    height: clamp(56px, 6.5vw, 80px);
+    background: var(--c-blue);
+    color: #fff;
+    border-radius: 50%;
+    display: grid;
+    place-content: center;
+    font-weight: 700;
+    font-size: clamp(1.05rem, 1.55vw, 1.35rem);
+    box-shadow: 0 0 0 3px #fff;
+}
+
+.turn {
+    box-shadow: 0 0 0 4px var(--c-amber) !important
+}
+
+.playerBox {
+    text-align: center;
+    font-size: .8rem;
+    line-height: 1.15
+}
+
+/* ─── карточки ─────────────────────────────────────────────── */
+/* ширина ~12% окна, но 100-180 px */
+.card {
+    width: clamp(100px, 12vw, 180px);
+    height: clamp(150px, 18vw, 260px);
+    background: var(--c-card);
+    border: 4px solid transparent;
+    border-radius: 14px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    user-select: none;
+    transition: transform .15s;
+}
+
+.card:hover {
+    transform: translateY(-5px)
+}
+
+.card:active {
+    transform: translateY(-2px)
+}
+
+.card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover
+}
+
+.YES {
+    border-color: var(--c-green);
+}
+
+.NO {
+    border-color: var(--c-red);
+}
+
+/* скрытые («лицевые вниз») карты без цветной рамки */
+.card.face-down.YES,
+.card.face-down.NO {
+    border-color: var(--c-border) !important;
+}
+
+.taken {
+    opacity: .3;
+    pointer-events: none;
+    transform: none !important
+}
+
+/* контейнеры карт */
+.cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .7rem;
+    justify-content: center
+}
+
+.table {
+    max-height: 60vh;
+    /* раньше 230px → больше места */
+    overflow-y: auto;
+    padding: .7rem;
+    background: #ffffff0d;
+    border-radius: 10px;
+    width: 100%;
+}
+
+@media (max-width:700px) {
+    .table {
+        max-height: 45vh;
+    }
+}
+
+/* мобильный */
+
+/* ─── текст / прочее ───────────────────────────────────────── */
+h3.subtitle {
+    font-size: clamp(1.1rem, 1.7vw, 1.35rem);
+    margin: 1.3rem 0 .5rem
+}
+
+.info {
+    font-weight: 600;
+    font-size: clamp(1rem, 1.45vw, 1.25rem);
+    text-align: center;
+    margin-bottom: .7rem
+}
+
+.controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center
+}
+
+.deckCnt {
+    margin-top: .5rem;
+    font-size: .9rem;
+    opacity: .7
+}
+
+/* ─── toast ────────────────────────────────────────────────── */
+#toastArea {
+    position: fixed;
+    top: 1.4rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: .7rem;
+}
+
+.toast {
+    background: #334155;
+    color: #fff;
+    padding: .65em 1.3em;
+    border-radius: 10px;
+    box-shadow: 0 4px 14px rgb(0 0 0 /.18);
+    animation: slideIn .3s;
+    font-size: clamp(.82rem, 1vw, .96rem);
+}
+
+.tableWrapper {
     position: relative;
     width: 100%;
-  }
-  #countdownOverlay {
+}
+
+#countdownOverlay {
     position: absolute;
-    top: 0; left: 0; right: 0; bottom: 0;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
     background: rgba(0, 0, 0, 0.5);
     display: flex;
     align-items: center;
@@ -127,7 +318,15 @@
     color: #fff;
     z-index: 10;
     pointer-events: none;
-  }
-  .hidden { display: none !important; }
-  
-  @keyframes slideIn{from{opacity:0;transform:translateY(-14px)}}  
+}
+
+.hidden {
+    display: none !important;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-14px)
+    }
+}

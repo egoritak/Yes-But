@@ -199,12 +199,18 @@ s.on('game_over',({winnerName})=>toast(`${winnerName} победил! Новая
 s.on('error_msg',msg=>toast(msg,'#ef4444'));
 
 /* ───── карточки ───── */
-function cardHTML(c,{hidden=false,showTaken=true}={}){
-  const taken = showTaken && c.taken ? ' taken' : '';
-  const inner = hidden
-      ? '???'
-      : `<img src="cards/${c.file}" alt="">`;
-  return `<div class="card ${c.type}${taken}" data-id="${c.id}">${inner}</div>`;
+function cardHTML(c, {hidden=false, showTaken=true} = {}) {
+  const takenCls = (showTaken && c.taken) ? ' taken' : '';
+  const faceCls  = hidden ? ' face-down' : '';    // ← новая метка
+  const inner    = hidden
+    ? '???'
+    : `<img src="cards/${c.file}" alt="">`;
+
+  return `
+    <div class="card ${c.type}${takenCls}${faceCls}"
+         data-id="${c.id}">
+      ${inner}
+    </div>`;
 }
 
 /* init */
