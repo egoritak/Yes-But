@@ -280,3 +280,24 @@ body {
     text-align: center;
     letter-spacing: .1em;
 }
+
+.card {
+    width: 110px;
+    height: 150px;
+    /* одинаковый размер */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    border: 2px solid #cbd5e1;
+    border-radius: 10px;
+    overflow: hidden;
+    /* скруглить само изображение */
+    transition: transform .15s;
+}
+
+.card img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}

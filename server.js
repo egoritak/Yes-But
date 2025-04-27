@@ -4,6 +4,9 @@ const http    = require('http');
 const { Server } = require('socket.io');
 const crypto  = require('crypto');
 
+const fs   = require('fs');
+const path = require('path');
+
 const app = express();
 const srv = http.createServer(app);
 const io  = new Server(srv);
@@ -40,15 +43,28 @@ class Game{
   }
 
   /* ---------- подготовка / колода ---------- */
-  buildDeck(){
-    this.deck=[];
-    rawPairs.forEach((p,i)=>{
-      const y=`Y${i}`, n=`N${i}`;
-      if(!this.removed.has(y)) this.deck.push({id:y,type:YES,text:p[0],pair:i});
-      if(!this.removed.has(n)) this.deck.push({id:n,type:NO ,text:p[1],pair:i});
+  buildDeck() {                       // формируем deck из папки /public/cards
+    this.deck = [];
+
+    const dir = path.join(__dirname, 'public', 'cards');
+    const groups = {};               // { '001': {Y:'001_Y.png', B:'001_B.png'} }
+
+    fs.readdirSync(dir).forEach(f => {
+      const m = f.match(/^(\d+)_([YB])\.(png|jpg|jpeg|webp)$/i);
+      if (!m) return;                // не подходит по маске
+      const [, num, kind] = m;
+      (groups[num] = groups[num] || {})[kind] = f;
     });
+
+    Object.entries(groups).forEach(([num, o]) => {
+      if (!o.Y || !o.B) return;      // неполная пара – пропускаем
+      this.deck.push({ id: `Y${num}`, type: 'YES', file: o.Y, pair: num });
+      this.deck.push({ id: `N${num}`, type: 'NO', file: o.B, pair: num });
+    });
+
     shuffle(this.deck);
   }
+
   freshDeck(exclude){
     const d=[];
     rawPairs.forEach((p,i)=>{

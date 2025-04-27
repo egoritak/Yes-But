@@ -168,9 +168,11 @@ s.on('error_msg',msg=>toast(msg,'#ef4444'));
 
 /* ───── карточки ───── */
 function cardHTML(c,{hidden=false,showTaken=true}={}){
-  const takenCls=showTaken&&c.taken?' taken':'';
-  const txt=hidden?'???':(c.type==='YES'?'Да':'Но')+': '+c.text;
-  return `<div class="card ${c.type}${takenCls}" data-id="${c.id}">${txt}</div>`;
+  const taken = showTaken && c.taken ? ' taken' : '';
+  const inner = hidden
+      ? '???'
+      : `<img src="cards/${c.file}" alt="">`;
+  return `<div class="card ${c.type}${taken}" data-id="${c.id}">${inner}</div>`;
 }
 
 /* init */
