@@ -1,305 +1,114 @@
-/* ========== базовые цвета/шрифты ========== */
-:root {
-    --c-bg: #f3f4f6;
-    --c-bg-dark: #1f2937;
-    --c-card: #ffffff;
-    --c-card-dark: #374151;
-    --c-border: #cbd5e1;
-    --c-txt: #1e293b;
-    --c-txt-dark: #e2e8f0;
-
-    --c-green: #16a34a;
-    --c-red: #dc2626;
-    --c-blue: #2563eb;
-    --c-amber: #f59e0b;
-}
-
-@media (prefers-color-scheme: dark) {
-    body {
-        background: var(--c-bg-dark);
-        color: var(--c-txt-dark);
-    }
-
-    .card {
-        background: var(--c-card-dark);
-    }
-
-    .panel {
-        background: #111827;
-    }
-
-    .input {
-        background: #374151;
-        color: var(--c-txt-dark);
-    }
-}
-
-* {
-    box-sizing: border-box;
-}
-
-body {
-    margin: 0;
-    font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    background: var(--c-bg);
-    color: var(--c-txt);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
-    padding: 2rem 1rem;
-}
-
-h3.subtitle {
-    margin: 1.2rem 0 .4rem;
-}
-
-.hidden {
-    display: none !important;
-}
-
-/* ========== lobby & game wrappers ========== */
-.panel {
-    width: 100%;
-    max-width: 800px;
-    background: var(--c-card);
-    border: 1px solid var(--c-border);
-    border-radius: 12px;
-    padding: 1.5rem;
-    box-shadow: 0 5px 15px rgb(0 0 0 / .05);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    animation: fadeIn .4s;
-}
-
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(10px)
-    }
-}
-
-.logo {
-    width: 120px;
-    margin-bottom: 1rem;
-    filter: drop-shadow(0 4px 6px #0002);
-}
-
-/* ========== form & buttons ========== */
-.input {
-    width: 100%;
-    padding: .6rem .9rem;
-    font-size: 1rem;
-    border: 1px solid var(--c-border);
-    border-radius: 8px;
-    margin: .4rem 0;
-}
-
-.btn {
-    padding: .55rem 1.2rem;
-    font-size: 1rem;
-    border: 0;
-    border-radius: 8px;
-    color: #fff;
-    cursor: pointer;
-    margin: .35rem;
-    transition: transform .12s, box-shadow .12s, opacity .2s;
-}
-
-.btn:disabled {
-    opacity: .35;
-    cursor: not-allowed;
-}
-
-.btn:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgb(0 0 0 / .15);
-}
-
-.primary {
-    background: var(--c-blue);
-}
-
-.green {
-    background: var(--c-green);
-}
-
-.amber {
-    background: var(--c-amber);
-}
-
-/* ========== player bar ========== */
-.players {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 1rem;
-    justify-content: center;
-    width: 100%;
-    margin-bottom: 1rem;
-}
-
-.avatar {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    background: var(--c-blue);
-    color: #fff;
-    display: grid;
-    place-content: center;
-    font-weight: 700;
-    font-size: 1rem;
-    box-shadow: 0 0 0 3px #fff;
-}
-
-.turn {
-    box-shadow: 0 0 0 3px var(--c-amber) !important;
-}
-
-.playerBox {
-    text-align: center;
-    font-size: .75rem;
-    line-height: 1.1;
-}
-
-/* ========== cards layout ========== */
-.cards {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .5rem;
-    justify-content: center;
-}
-
-.table {
-    max-height: 230px;
-    overflow-y: auto;
-    padding: .5rem;
-}
-
-.card {
-    min-width: 9rem;
-    max-width: 11rem;
-    background: var(--c-card);
-    border: 2px solid var(--c-border);
-    border-radius: 10px;
-    padding: .65rem .8rem;
-    cursor: pointer;
-    user-select: none;
-    transition: transform .15s;
-}
-
-.card:hover {
-    transform: translateY(-3px);
-}
-
-.card:active {
-    transform: translateY(-1px);
-}
-
-.YES {
-    border-color: var(--c-green);
-}
-
-.NO {
-    border-color: var(--c-red);
-}
-
-.taken {
-    opacity: .32;
-    pointer-events: none;
-    transform: none !important;
-}
-
-/* ========== info / controls ========== */
-.info {
-    font-weight: 600;
-    margin: 0 0 .6rem;
-    text-align: center;
-}
-
-.controls {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-}
-
-/* ========== toast ========== */
-#toastArea {
-    position: fixed;
-    top: 18px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    gap: .5rem;
-}
-
-.toast {
-    background: #334155;
-    color: #fff;
-    padding: .55rem 1.1rem;
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgb(0 0 0 / .15);
-    animation: slideIn .3s;
-}
-
-@keyframes slideIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px)
-    }
-}
-
-/* ─── базовый “flex-центр” для всего сайта ─────────────────── */
-body {
-    display: flex;
-    /* центрируем flex-ом */
-    flex-direction: column;
-    justify-content: center;
-    /* по вертикали */
-    align-items: center;
-    /* по горизонтали */
-    min-height: 100vh;
-    /* высота на полный экран */
-    margin: 0;
-    background: var(--c-bg);
-    color: var(--c-txt);
-    font-family: system-ui, sans-serif;
-}
-
-/* сами панели пусть занимают максимум 420 px и фикс-шину на мобиле */
-.panel {
-    width: 100%;
-    max-width: 420px;
-    box-sizing: border-box;
-}
-
-/* по желанию: узкое поле кода сделаем чуть ровнее */
-.input.short {
-    text-align: center;
-    letter-spacing: .1em;
-}
-
-.card {
-    width: 110px;
-    height: 200px;
-    /* одинаковый размер */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #fff;
-    border: 2px solid #cbd5e1;
-    border-radius: 10px;
-    overflow: hidden;
-    /* скруглить само изображение */
-    transition: transform .15s;
-}
-
-.card img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.deckCnt{margin-top:.4rem;font-size:.85rem;opacity:.7;}
+/* ─── базовые цвета ───────────────────────────────────────── */
+:root{
+    --c-bg:#f3f4f6;         --c-bg-dark:#1f2937;
+    --c-card:#ffffff;       --c-card-dark:#374151;
+    --c-border:#cbd5e1;
+    --c-txt:#1e293b;        --c-txt-dark:#e2e8f0;
+  
+    --c-green:#22c55e;      /* насыщеннее рамка Да */
+    --c-red:#ef4444;        /* насыщеннее рамка Нет */
+    --c-blue:#2563eb;       --c-amber:#f59e0b;
+  }
+  
+  /* dark-mode */
+  @media (prefers-color-scheme:dark){
+    body{background:var(--c-bg-dark);color:var(--c-txt-dark);}
+    .panel{background:#111827;}
+    .card{background:var(--c-card-dark);}
+    .input{background:#374151;color:var(--c-txt-dark);}
+  }
+  
+  *{box-sizing:border-box;margin:0;padding:0}
+  
+  /* ─── базовый flex-центр страницы ─────────────────────────── */
+  body{
+    display:flex;flex-direction:column;justify-content:center;align-items:center;
+    min-height:100vh;padding:2vh 1vw;background:var(--c-bg);color:var(--c-txt);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  }
+  
+  .hidden{display:none!important}
+  
+  /* ─── панели (landing / lobby / game) ─────────────────────── */
+  .panel{
+    width:90vw; max-width:1200px;
+    background:var(--c-card);border:1px solid var(--c-border);border-radius:16px;
+    padding:clamp(1rem,2.4vw,3rem);
+    box-shadow:0 6px 20px rgb(0 0 0 /.08);
+    display:flex;flex-direction:column;align-items:center;gap:clamp(1rem,1.8vw,1.6rem);
+    animation:fadeIn .4s;overflow:auto;        /* прокрутка на малых экранах */
+  }
+  @keyframes fadeIn{from{opacity:0;transform:translateY(12px)}}
+  
+  .logoTxt{font-size:clamp(1.8rem,4.3vw,2.8rem);margin-bottom:.6em}
+  
+  /* ─── формы и кнопки ───────────────────────────────────────── */
+  .input{
+    width:100%;padding:.75em 1em;font-size:clamp(.95rem,1.1vw,1.15rem);
+    border:1px solid var(--c-border);border-radius:10px;margin:.45em 0;
+  }
+  .input.short{text-align:center;letter-spacing:.1em}
+  
+  .btn{
+    padding:.75em 1.4em;font-size:clamp(.95rem,1.15vw,1.2rem);
+    border:0;border-radius:10px;color:#fff;cursor:pointer;margin:.4em;
+    transition:transform .12s,box-shadow .12s,opacity .2s;
+  }
+  .btn:hover:not(:disabled){transform:translateY(-3px);box-shadow:0 5px 12px rgb(0 0 0 /.18)}
+  .btn:disabled{opacity:.35;cursor:not-allowed}
+  .primary{background:var(--c-blue);}  .green{background:var(--c-green);}  .amber{background:var(--c-amber);}
+  .btn.tiny{padding:.35em .8em;font-size:.78rem}
+  
+  /* ─── player-bar ───────────────────────────────────────────── */
+  .players{display:flex;flex-wrap:wrap;gap:clamp(.9rem,1.6vw,1.4rem);justify-content:center;width:100%}
+  .avatar{
+    width:clamp(56px,6.5vw,80px);height:clamp(56px,6.5vw,80px);
+    background:var(--c-blue);color:#fff;border-radius:50%;
+    display:grid;place-content:center;font-weight:700;font-size:clamp(1.05rem,1.55vw,1.35rem);
+    box-shadow:0 0 0 3px #fff;
+  }
+  .turn{box-shadow:0 0 0 4px var(--c-amber)!important}
+  .playerBox{text-align:center;font-size:.8rem;line-height:1.15}
+  
+  /* ─── карточки ─────────────────────────────────────────────── */
+  /* ширина ~12% окна, но 100-180 px */
+  .card{
+    width:clamp(100px,12vw,180px);height:clamp(150px,18vw,260px);
+    background:var(--c-card);border:4px solid transparent;border-radius:14px;
+    overflow:hidden;display:flex;align-items:center;justify-content:center;
+    cursor:pointer;user-select:none;transition:transform .15s;
+  }
+  .card:hover{transform:translateY(-5px)}
+  .card:active{transform:translateY(-2px)}
+  .card img{width:100%;height:100%;object-fit:cover}
+  .YES{border-color:var(--c-green);}
+  .NO {border-color:var(--c-red);}
+  .taken{opacity:.3;pointer-events:none;transform:none!important}
+  
+  /* контейнеры карт */
+  .cards{display:flex;flex-wrap:wrap;gap:.7rem;justify-content:center}
+  .table{
+    max-height:60vh;                    /* раньше 230px → больше места */
+    overflow-y:auto;padding:.7rem;
+    background:#ffffff0d;border-radius:10px;width:100%;
+  }
+  @media (max-width:700px){ .table{max-height:45vh;} }  /* мобильный */
+  
+  /* ─── текст / прочее ───────────────────────────────────────── */
+  h3.subtitle{font-size:clamp(1.1rem,1.7vw,1.35rem);margin:1.3rem 0 .5rem}
+  .info{font-weight:600;font-size:clamp(1rem,1.45vw,1.25rem);text-align:center;margin-bottom:.7rem}
+  .controls{display:flex;flex-wrap:wrap;justify-content:center}
+  
+  .deckCnt{margin-top:.5rem;font-size:.9rem;opacity:.7}
+  
+  /* ─── toast ────────────────────────────────────────────────── */
+  #toastArea{
+    position:fixed;top:1.4rem;left:50%;transform:translateX(-50%);
+    z-index:9999;display:flex;flex-direction:column;gap:.7rem;
+  }
+  .toast{
+    background:#334155;color:#fff;padding:.65em 1.3em;border-radius:10px;
+    box-shadow:0 4px 14px rgb(0 0 0 /.18);animation:slideIn .3s;
+    font-size:clamp(.82rem,1vw,.96rem);
+  }
+  @keyframes slideIn{from{opacity:0;transform:translateY(-14px)}}  
