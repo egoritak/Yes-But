@@ -3,24 +3,45 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Да / Но — онлайн-партия</title>
+<title>Да / Но – онлайн-партия</title>
 
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-<!-- ── Welcome ─────────────────────────────────────────────── -->
-<section id="lobby" class="panel">
-  <img src="https://i.imgur.com/a2y4mql.png" alt="Yes / But" class="logo" />
-  <input id="room" class="input" placeholder="компания / room" />
-  <input id="name" class="input" placeholder="ваше имя" />
-  <button id="joinBtn" class="btn primary">Начать</button>
+<!-- ▸ Landing: создание / подключение -------------------------------- -->
+<section id="landing" class="panel">
+  <h1 class="logoTxt">Да / Но</h1>
+
+  <div class="box">
+    <h3>Создать комнату</h3>
+    <input id="creatorName" class="input" placeholder="Ваше имя" />
+    <button id="btnCreate" class="btn primary">Создать</button>
+  </div>
+
+  <div class="box">
+    <h3>Подключиться</h3>
+    <input id="joinCode"  class="input" placeholder="код комнаты" />
+    <input id="joinName"  class="input" placeholder="Ваше имя" />
+    <button id="btnJoin"   class="btn green">Подключиться</button>
+  </div>
 </section>
 
-<!-- ── Game ────────────────────────────────────────────────── -->
-<section id="game" class="panel hidden">
-  <header id="playersBar" class="players"></header>
+<!-- ▸ Lobby: ждём игроков -------------------------------------------- -->
+<section id="lobby" class="panel hidden">
+  <p>Код комнаты: <strong id="roomCode"></strong>
+     <button id="copyBtn" class="btn tiny">📋</button></p>
 
+  <h3>Игроки в комнате</h3>
+  <ul id="playersList"></ul>
+
+  <button id="btnStart" class="btn amber hidden">Начать игру</button>
+</section>
+
+<!-- ▸ Game UI --------------------------------------------------------- -->
+<section id="game" class="panel hidden">
+
+  <header id="playersBar" class="players"></header>
   <p id="info" class="info"></p>
 
   <div class="controls">
@@ -29,13 +50,13 @@
   </div>
 
   <h3 class="subtitle">Ваша рука</h3>
-  <div id="hand"  class="cards"></div>
+  <div id="hand" class="cards"></div>
 
   <h3 class="subtitle">Стол</h3>
   <div id="table" class="cards table"></div>
 </section>
 
-<!-- ── Toast container ─────────────────────────────────────── -->
+<!-- ▸ Toast контейнер ------------------------------------------------- -->
 <div id="toastArea"></div>
 
 <script src="/socket.io/socket.io.js"></script>

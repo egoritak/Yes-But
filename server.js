@@ -1,15 +1,15 @@
 /* eslint-disable no-console */
-const express  = require('express');
-const http     = require('http');
+const express = require('express');
+const http    = require('http');
 const { Server } = require('socket.io');
+const crypto  = require('crypto');
 
 const app = express();
 const srv = http.createServer(app);
 const io  = new Server(srv);
-
 app.use(express.static('public'));
 
-/* ---------- «база» пар ---------- */
+/* ───── постоянные данные ───── */
 const rawPairs = [
   ['Твой самолёт прилетает вовремя',  'Твой багаж задерживается'],
   ['Ты выигрываешь 100 €',            'Потерял кошелёк'],
@@ -19,227 +19,214 @@ const rawPairs = [
 ];
 const YES = 'YES', NO = 'NO';
 
-/* ---------- вспомогательное ---------- */
-function shuffle(a){
-  for (let i = a.length - 1; i > 0; i--){
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-}
+/* ───── утилиты ───── */
+const genCode = () => crypto.randomBytes(2).toString('hex').toUpperCase();
+const shuffle = a => { for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];} };
 
-/* ---------- класс Game (одна комната) ---------- */
+/* ───── класс Game (комната) ───── */
 class Game{
-  constructor(roomId){
-    this.id = roomId;
-    this.players = [];                 // [{id,name,hand,score,claimedRound}]
-    this.reset();                      // инициализировать поля партии
+  constructor(code, adminId){
+    this.id      = code;
+    this.admin   = adminId;        // socket.id создателя
+    this.started = false;
+
+    this.players = [];             // [{id,name,hand,score,claimed}]
+    this.turnIdx = 0;
+    this.table   = [];
+    this.revealed=false;
+
+    this.removed = new Set();      // карты, окончательно ушедшие из игры
+    this.buildDeck();
   }
 
-  /* сброс партии: руки/счёт/колода,   но игроки остаются */
-  reset(){
-    this.turnIdx  = 0;
-    this.table    = [];
-    this.revealed = false;
-
-    /* карты, выбывшие после удачных пар – никогда не раздаём снова */
-    this.removed  = new Set();
-
-    this.buildDeckFull();
-
-    /* очистить руки и счёт, раздать по 2 карты */
-    this.players.forEach(p=>{
-      p.hand = [];
-      p.score = 0;
-      p.claimedRound = false;
-      this.deal(p, 2);
-    });
-    this.emitState();
-  }
-
-  /* сформировать «полную» колоду, исключая removed */
-  buildDeckFull(){
-    this.deck = [];
+  /* ---------- подготовка / колода ---------- */
+  buildDeck(){
+    this.deck=[];
     rawPairs.forEach((p,i)=>{
-      const y = `Y${i}`, n = `N${i}`;
+      const y=`Y${i}`, n=`N${i}`;
       if(!this.removed.has(y)) this.deck.push({id:y,type:YES,text:p[0],pair:i});
       if(!this.removed.has(n)) this.deck.push({id:n,type:NO ,text:p[1],pair:i});
     });
     shuffle(this.deck);
   }
-
-  /* собрать новую колоду, исключив id в exclude */
   freshDeck(exclude){
-    const deck = [];
+    const d=[];
     rawPairs.forEach((p,i)=>{
       const y=`Y${i}`, n=`N${i}`;
-      if(!exclude.has(y) && !this.removed.has(y))
-        deck.push({id:y,type:YES,text:p[0],pair:i});
-      if(!exclude.has(n) && !this.removed.has(n))
-        deck.push({id:n,type:NO ,text:p[1],pair:i});
+      if(!exclude.has(y) && !this.removed.has(y)) d.push({id:y,type:YES,text:p[0],pair:i});
+      if(!exclude.has(n) && !this.removed.has(n)) d.push({id:n,type:NO ,text:p[1],pair:i});
     });
-    shuffle(deck);
-    return deck;
+    shuffle(d); return d;
   }
 
-  player(id){ return this.players.find(p=>p.id === id); }
+  /* ---------- утил ---------- */
+  player(id){ return this.players.find(p=>p.id===id); }
+  room()  { return io.to(this.id); }
 
-  /* раздать n карт; если колода кончилась – пересобрать без дубликатов */
-  deal(to, n = 1){
-    let dealt = 0;
+  /* ---------- раздача ---------- */
+  deal(p,n=1){
+    let given=0;
     while(n--){
       if(!this.deck.length){
-        const inPlay = new Set(
-          this.players.flatMap(p=>p.hand.map(c=>c.id))
-            .concat(this.table.map(c=>c.id))
-        );
-        this.deck = this.freshDeck(inPlay);
-        if(!this.deck.length) break;             // всё закончилось
+        const inPlay=new Set(this.players.flatMap(pl=>pl.hand.map(c=>c.id))
+                              .concat(this.table.map(c=>c.id)));
+        this.deck=this.freshDeck(inPlay);
+        if(!this.deck.length) break;
       }
-      to.hand.push(this.deck.pop());
-      dealt++;
+      p.hand.push(this.deck.pop()); given++;
     }
-    return dealt > 0;
+    return given>0;
   }
 
-  nextTurn(){
-    this.turnIdx = (this.turnIdx + 1) % this.players.length;
+  /* ---------- рестарт партии ---------- */
+  resetParty(){
+    this.turnIdx=0; this.table=[]; this.revealed=false; this.removed=new Set();
+    this.buildDeck();
+    this.players.forEach(p=>{ p.hand=[]; p.score=0; p.claimed=false; this.deal(p,2); });
     this.emitState();
   }
 
-  room(){ return io.to(this.id); }
+  /* ---------- перейти ходу ---------- */
+  nextTurn(){
+    this.turnIdx=(this.turnIdx+1)%this.players.length;
+    this.emitState();
+  }
 
-  /* отправить состояние всем в комнате */
+  /* ---------- отправка состояний ---------- */
+  emitLobby(){
+    this.room().emit('lobby_state',{
+      players:this.players.map(p=>p.name),
+      adminId:this.admin
+    });
+  }
   emitState(){
     this.room().emit('state',{
-      players : this.players.map(p=>({
-        id:p.id, name:p.name, score:p.score, handCount:p.hand.length
-      })),
-      active  : this.players[this.turnIdx]?.id,
-      table   : this.revealed
-                ? this.table
-                : this.table.map(c=>({...c,text:'???'}))
+      players:this.players.map(p=>({id:p.id,name:p.name,score:p.score,handCount:p.hand.length})),
+      active :this.players[this.turnIdx]?.id,
+      table  :this.revealed ? this.table
+                            : this.table.map(c=>({...c,text:'???'}))
     });
-    /* каждому – реальную руку */
-    this.players.forEach(p=> io.to(p.id).emit('hand', p.hand));
+    this.players.forEach(p=> io.to(p.id).emit('hand',p.hand));
   }
 }
 
-/* ---------- комнаты ---------- */
-const games = new Map();
-function game(roomId){
-  if(!games.has(roomId)) games.set(roomId, new Game(roomId));
-  return games.get(roomId);
-}
+/* ───── хранилище комнат ───── */
+const rooms = new Map();       // code => Game
 
-/* ---------- Socket.IO ---------- */
-io.on('connection', sock => {
+/* ───── Socket.IO ───── */
+io.on('connection',sock=>{
 
-  /* ---- JOIN ---- */
-  sock.on('join', ({roomId, name}) => {
-    if(!roomId) return;
-    const g = game(roomId);
-    sock.join(roomId);
+  /* ===== CREATE ROOM ===== */
+  sock.on('create_room',({name})=>{
+    const code=genCode();
+    const g=new Game(code,sock.id);
+    rooms.set(code,g);
+    sock.join(code);
+    g.players.push({id:sock.id,name,hand:[],score:0,claimed:false});
+    sock.emit('room_created',{code});
+    g.emitLobby();
+  });
 
-    /* если игрок переподключился – не дублируем */
-    if(!g.player(sock.id)){
-      g.players.push({
-        id:sock.id, name:name||sock.id.slice(0,5),
-        hand:[], score:0, claimedRound:false
-      });
-      g.deal(g.player(sock.id), 2);
-    }
+  /* ===== JOIN ROOM ===== */
+  sock.on('join_room',({code,name})=>{
+    const g=rooms.get(code);
+    if(!g || g.started){ sock.emit('error_msg','Комната не найдена'); return; }
+    sock.join(code);
+    g.players.push({id:sock.id,name,hand:[],score:0,claimed:false});
+    g.emitLobby();
+  });
+
+  /* ===== START GAME (admin) ===== */
+  sock.on('start_game',({code})=>{
+    const g=rooms.get(code);
+    if(!g || g.started || g.admin!==sock.id) return;
+    g.started=true;
+    g.players.forEach(p=>g.deal(p,2));
     g.emitState();
   });
 
-  /* ---- PLAY CARD ---- */
-  sock.on('play_card', ({roomId})=>{
-    const g = games.get(roomId); if(!g) return;
-    if(g.players[g.turnIdx].id !== sock.id) return;   // не твой ход
-    const pl = g.player(sock.id);
-    if(!pl.hand.length) return;
+  /* ====== GAMEPLAY EVENTS (работают только в запущенной комнате) ====== */
+  sock.on('play_card',({code})=>{
+    const g=rooms.get(code); if(!g||!g.started) return;
+    if(g.players[g.turnIdx].id!==sock.id) return;
+    const pl=g.player(sock.id); if(!pl.hand.length) return;
 
-    const card = pl.hand.shift();
-    g.table.push({...card, owner:sock.id, taken:false});
-    g.revealed = (g.table.length === g.players.length);
+    const card=pl.hand.shift();
+    g.table.push({...card,owner:sock.id,taken:false});
+    g.revealed=g.table.length===g.players.length;
     g.emitState();
     if(g.revealed) g.room().emit('reveal');
     g.nextTurn();
   });
 
-  /* ---- CLAIM CARD ---- */
-  sock.on('claim_card', ({roomId, cardId})=>{
-    const g = games.get(roomId); if(!g || !g.revealed) return;
-    const pl = g.player(sock.id); if(pl.claimedRound) return;
+  sock.on('claim_card',({code,cardId})=>{
+    const g=rooms.get(code); if(!g||!g.started||!g.revealed) return;
+    const pl=g.player(sock.id); if(pl.claimed) return;
+    const card=g.table.find(c=>c.id===cardId); if(!card||card.taken) return;
 
-    const card = g.table.find(c=>c.id === cardId); if(!card || card.taken) return;
-    card.taken = true;
-    pl.claimedRound = true;
-    pl.hand.push({...card, taken:false});            // копия без флага
+    card.taken=true; pl.claimed=true;
+    pl.hand.push({...card,taken:false});
     g.room().emit('card_claimed',{cardId,byName:pl.name});
 
-    /* конец раунда? */
-    const roundDone = g.table.every(c=>c.taken) || g.players.every(p=>p.claimedRound);
-    if(roundDone){
-      g.players.forEach(p=>{ p.claimedRound=false; g.deal(p); });
-      g.table.length = 0; g.revealed = false;
-      g.emitState();
+    const end=g.table.every(c=>c.taken)||g.players.every(p=>p.claimed);
+    if(end){
+      g.players.forEach(p=>{p.claimed=false; g.deal(p);});
+      g.table=[]; g.revealed=false; g.emitState();
     }
   });
 
-  /* ---- MAKE PAIR ---- */
-  sock.on('make_pair', ({roomId, yesId, noId})=>{
-    const g = games.get(roomId); if(!g) return;
-    if(g.players[g.turnIdx].id !== sock.id) return;
-    const pl = g.player(sock.id);
+  sock.on('make_pair',({code,yesId,noId})=>{
+    const g=rooms.get(code); if(!g||!g.started) return;
+    if(g.players[g.turnIdx].id!==sock.id) return;
+    const pl=g.player(sock.id);
 
-    const yesIdx = pl.hand.findIndex(c=>c.id===yesId && c.type===YES);
-    const noIdx  = pl.hand.findIndex(c=>c.id===noId  && c.type===NO );
-    if(yesIdx===-1 || noIdx===-1) return;
+    const yi=pl.hand.findIndex(c=>c.id===yesId&&c.type===YES);
+    const ni=pl.hand.findIndex(c=>c.id===noId &&c.type===NO );
+    if(yi===-1||ni===-1) return;
 
-    const yes = pl.hand.splice(yesIdx,1)[0];
-    const no  = pl.hand.splice(noIdx < yesIdx ? noIdx : noIdx-1,1)[0];
-
+    const yes=pl.hand.splice(yi,1)[0];
+    const no =pl.hand.splice(ni<yi?ni:ni-1,1)[0];
     g.room().emit('pair_attempt',{byName:pl.name,yes,no});
 
-    if(yes.pair === no.pair){                    // успех
-      pl.score++;
-      g.removed.add(yes.id);
-      g.removed.add(no.id);
+    if(yes.pair===no.pair){
+      pl.score++; g.removed.add(yes.id); g.removed.add(no.id);
       g.room().emit('pair_success',{byName:pl.name,score:pl.score});
-      if(pl.score >= 3){
+      if(pl.score>=3){
         g.room().emit('game_over',{winnerName:pl.name});
-        g.reset();                               // новая партия
-        return;
+        g.resetParty(); return;
       }
-    }else{                                       // промах
-      g.deck.push(yes, no); shuffle(g.deck);
+    }else{
+      g.deck.push(yes,no); shuffle(g.deck);
       g.room().emit('pair_fail',{byName:pl.name});
     }
 
-    /* добрать до 2 */
-    while (pl.hand.length < 2 && g.deal(pl));
-
-    /* если карт нет – пасуем; иначе игрок продолжает ход */
-    if(pl.hand.length === 0) g.nextTurn();
-    else                     g.emitState();
+    while(pl.hand.length<2 && g.deal(pl));
+    if(pl.hand.length===0) g.nextTurn(); else g.emitState();
   });
 
-  /* ---- DISCONNECT ---- */
-  sock.on('disconnect', ()=>{
-    games.forEach((g, roomId)=>{
-      const idx = g.players.findIndex(p=>p.id === sock.id);
-      if(idx !== -1){
-        g.players.splice(idx,1);
-        if(g.players.length === 0) games.delete(roomId);
-        else{
-          if(g.turnIdx >= g.players.length) g.turnIdx = 0;
-          g.emitState();
-        }
-      }
+  /* ====== DISCONNECT ====== */
+  sock.on('disconnect',()=>{
+    rooms.forEach((g,code)=>{
+      const idx=g.players.findIndex(p=>p.id===sock.id);
+      if(idx===-1) return;
+
+      const wasAdmin = g.admin===sock.id;
+      g.players.splice(idx,1);
+
+      /* если лобби и игроков нет — удаляем комнату */
+      if(!g.started && g.players.length===0){ rooms.delete(code); return; }
+
+      /* если лобби, но админ вышел → новый админ */
+      if(!g.started && wasAdmin){ g.admin=g.players[0].id; }
+
+      /* если партия, подвинем ход */
+      if(g.started && g.turnIdx>=g.players.length) g.turnIdx=0;
+
+      g.started ? g.emitState() : g.emitLobby();
     });
   });
 });
 
-/* ---------- run ---------- */
-const PORT = process.env.PORT || 3000;
-srv.listen(PORT, ()=> console.log('Yes-But server on', PORT));
+/* ───── run ───── */
+const PORT=process.env.PORT||3000;
+srv.listen(PORT,()=>console.log('Yes-But server on',PORT));
