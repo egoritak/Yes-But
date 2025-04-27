@@ -60,6 +60,27 @@ function showQR(code){
   $('qrBox').classList.remove('hidden');
 }
 
+/* ---- clipboard helper ----------------------------------- */
+function copyText(text) {
+  if (navigator.clipboard?.writeText) {          // HTTPS или localhost
+    navigator.clipboard.writeText(text)
+      .then(() => toast('Код скопирован'))
+      .catch(() => legacyCopy(text));
+  } else {
+    legacyCopy(text);                            // fallback
+  }
+
+  function legacyCopy(t) {                       // execCommand
+    const tmp = document.createElement('input');
+    tmp.value = t;
+    document.body.appendChild(tmp);
+    tmp.select();
+    document.execCommand('copy');
+    tmp.remove();
+    toast('Код скопирован');
+  }
+}
+
 /* ───── validators ───── */
 const nameOK = () => userName.value.trim().length > 0;
 const codeOK = () => /^[A-Z0-9]{4}$/.test(codeIn.value.trim().toUpperCase());
@@ -124,10 +145,7 @@ s.on('room_created',({code})=>{
 
   showQR(code);
 
-  copyBt.onclick = () => {
-    navigator.clipboard.writeText(code);
-    toast('Код скопирован');
-  };
+  copyBt.onclick = () => copyText(code);
   startBt.classList.remove('hidden');           // я — админ
 });
 
@@ -141,7 +159,7 @@ s.on('lobby_state',({players,adminId})=>{
   lobby.classList.remove('hidden');
   roomTxt.textContent = room;
   showQR(room);
-  copyBt.onclick = () => { navigator.clipboard.writeText(room); toast('Код скопирован'); };
+  copyBt.onclick = () => copyText(code);
 });
 
 startBt.onclick = () => s.emit('start_game',{code:room});
