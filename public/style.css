@@ -324,6 +324,29 @@ h3.subtitle {
     display: none !important;
 }
 
+/* pairOverlay — полупрозрачный фон и центрированная пара */
+#pairOverlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+  }
+  #pairOverlay.hidden { display: none; }
+  
+  .pairBox {
+    display: flex;
+    gap: 1.5rem;
+  }
+  .card.large {
+    width: clamp(120px,15vw,240px);
+    height: clamp(180px,22vw,360px);
+    border-width: 6px !important;
+  }
+  
+
 @keyframes slideIn {
     from {
         opacity: 0;

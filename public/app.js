@@ -9,6 +9,7 @@ function toast(msg, color = '#334155') {
   setTimeout(() => el.remove(), 2500);
 }
 
+
 /* ───── DOM & state ───── */
 const $        = id => document.getElementById(id);
 const s        = io();
@@ -33,6 +34,10 @@ const handDiv  = $('hand');
 const tableDiv = $('table');
 const playBt   = $('playBtn');
 const pairBt   = $('pairBtn');
+
+const pairOverlay = document.getElementById('pairOverlay');
+const pairYesEl   = document.getElementById('pairYes');
+const pairNoEl    = document.getElementById('pairNo');
 
 let room='', myName='', myId='', active='', names={}, selecting=[];
 
@@ -62,6 +67,24 @@ joinBt.onclick   = () =>{
   if(!codeOK()) { toast('Код из 4 символов'); return; }
   s.emit('join_room',{code:room,name:myName});
 };
+
+// 1) когда сервер сообщает, что кто-то пытается пару — показываем оверлей
+s.on('pair_reveal', ({byName, yes, no}) => {
+  // рендерим картинки (или текст) внутри больших карточек
+  pairYesEl.innerHTML = `<img src="cards/${yes.file}" alt="">`;
+  pairNoEl.innerHTML  = `<img src="cards/${no.file}"  alt="">`;
+  pairOverlay.classList.remove('hidden');
+});
+
+// 2) на успех/провал — через секунду скрываем оверлей и показываем toast
+s.on('pair_success', ({byName, score}) => {
+  pairOverlay.classList.add('hidden');
+  toast(`${byName} правильно составил пару! (${score})`, '#22c55e');
+});
+s.on('pair_fail', ({byName}) => {
+  pairOverlay.classList.add('hidden');
+  toast(`${byName} ошибся с парой`, '#ef4444');
+});
 
 /* ───── lobby events ───── */
 s.on('room_created',({code})=>{

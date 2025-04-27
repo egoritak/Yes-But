@@ -245,20 +245,31 @@ io.on('connection',sock=>{
 
     const yes=pl.hand.splice(yi,1)[0];
     const no =pl.hand.splice(ni<yi?ni:ni-1,1)[0];
-    g.room().emit('pair_attempt',{byName:pl.name,yes,no});
 
-    if(yes.pair===no.pair){
-      pl.score++; g.removed.add(yes.id); g.removed.add(no.id);
-      g.room().emit('pair_success',{byName:pl.name,score:pl.score});
-      if(pl.score>=3){ g.room().emit('game_over',{winnerName:pl.name}); g.resetParty(); return;}
-    }else{
-      g.deck.push(yes,no); shuffle(g.deck);
-      g.left=g.deck.length;
-      g.room().emit('pair_fail',{byName:pl.name});
-    }
+    // 1) сразу показываем всем, какие две карты пытаются составить
+    g.room().emit('pair_reveal', { byName: pl.name, yes, no });
 
-    while(pl.hand.length<2 && g.deal(pl));
-    if(pl.hand.length===0) g.nextTurn(); else g.emitState();
+    // 2) через секунду оцениваем и шлём успех или провал
+    setTimeout(() => {
+      if (yes.pair === no.pair) {
+        pl.score++;
+        g.removed.add(yes.id); g.removed.add(no.id);
+        g.room().emit('pair_success', { byName: pl.name, score: pl.score });
+        if (pl.score >= 3) {
+          g.room().emit('game_over', { winnerName: pl.name });
+          g.resetParty();
+          return;
+        }
+      } else {
+        g.deck.push(yes, no); shuffle(g.deck);
+        g.room().emit('pair_fail', { byName: pl.name });
+      }
+
+      // добор и передача хода как раньше
+      while (pl.hand.length < 2 && g.deal(pl));
+      if (pl.hand.length === 0) g.nextTurn();
+      else g.emitState();
+    }, 1000);
   });
 
   /* ---- disconnect ---- */
