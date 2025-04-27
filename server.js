@@ -1,3 +1,5 @@
+const os = require('os');
+
 /* eslint-disable no-console */
 const express = require('express');
 const http    = require('http');
@@ -290,5 +292,25 @@ io.on('connection',sock=>{
 });
 
 /* ── run ── */
-const PORT=process.env.PORT||3000;
-srv.listen(PORT,()=>console.log('Yes-But server on',PORT));
+const PORT = process.env.PORT || 3000;
+const HOST = '0.0.0.0';
+
+srv.listen(PORT, HOST, () => {
+  // Собираем все сетевые IPv4-адреса, кроме internal
+  const nets = os.networkInterfaces();
+  const addresses = [];
+  for (const name of Object.keys(nets)) {
+    for (const net of nets[name]) {
+      if (net.family === 'IPv4' && !net.internal) {
+        addresses.push(net.address);
+      }
+    }
+  }
+
+  console.log(`Yes-But server listening on port ${PORT}.`);
+  console.log(`Accessible URLs:`);
+  addresses.forEach(addr => {
+    console.log(`  http://${addr}:${PORT}`);
+  });
+  console.log(`  http://localhost:${PORT}`);
+});
