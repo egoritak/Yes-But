@@ -1,85 +1,89 @@
 <!DOCTYPE html>
 <html lang="ru">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Да / Но — браузерная игра</title>
 
-<link rel="stylesheet" href="style.css" />
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Да / Но — браузерная игра</title>
+
+  <link rel="stylesheet" href="style.css" />
 </head>
+
 <body>
 
-<!-- ── Landing ─────────────────────────────────────────────── -->
-<section id="landing" class="panel">
-  <h1 class="logoTxt">Да / Но</h1>
+  <!-- ── Landing ─────────────────────────────────────────────── -->
+  <section id="landing" class="panel">
+    <h1 class="logoTxt">Да / Но</h1>
 
-  <input id="userName" class="input wide" placeholder="Ваше имя *" />
+    <input id="userName" class="input wide" placeholder="Ваше имя *" />
 
-  <div class="codeRow">
-    <input id="codeInput" class="input short uc" maxlength="4" placeholder="Код (XXXX)" />
-    <button id="joinBtn" class="btn green" disabled>Подключиться</button>
-  </div>
+    <div class="codeRow">
+      <input id="codeInput" class="input short uc" maxlength="4" placeholder="Код (XXXX)" />
+      <button id="joinBtn" class="btn green" disabled>Подключиться</button>
+    </div>
 
-  <button id="createBtn" class="btn primary w-full" disabled>Создать новую комнату</button>
-</section>
+    <button id="createBtn" class="btn primary w-full" disabled>Создать новую комнату</button>
+  </section>
 
-<!-- ── Lobby ───────────────────────────────────────────────── -->
-<section id="lobby" class="panel hidden">
-  <p>Код комнаты: <strong id="roomCode"></strong>
-     <button id="copyBtn" class="btn tiny">📋</button></p>
+  <!-- ── Lobby ───────────────────────────────────────────────── -->
+  <section id="lobby" class="panel hidden">
+    <p>Код комнаты: <strong id="roomCode"></strong>
+      <button id="copyBtn" class="btn tiny">📋</button>
+    </p>
 
-     <div id="qrBox" class="hidden">
+    <div id="qrBox" class="hidden">
       <img id="qrImg" alt="QR code">
     </div>
 
-  <h3>Участники</h3>
-  <ul id="playersList"></ul>
+    <h3>Участники</h3>
+    <ul id="playersList"></ul>
 
-  <button id="startBtn" class="btn amber hidden">Начать игру</button>
-</section>
+    <button id="startBtn" class="btn amber hidden">Начать игру</button>
+  </section>
 
-<!-- ── Game UI (без изменений) ─────────────────────────────── -->
-<section id="game" class="panel hidden">
-  <header id="playersBar" class="players"></header>
-  <p id="info" class="info"></p>
+  <!-- ── Game UI (без изменений) ─────────────────────────────── -->
+  <section id="game" class="panel hidden">
+    <header id="playersBar" class="players"></header>
+    <p id="info" class="info"></p>
 
-  <div class="controls">
-    <button id="playBtn" class="btn green">Выложить левую</button>
-    <button id="pairBtn" class="btn amber">Составить пару</button>
-  </div>
-
-  <h3 class="subtitle">Ваша рука</h3>
-  <div id="hand" class="cards"></div>
-
-  <h3 class="subtitle">Стол</h3>
-  <div id="tableWrapper" class="tableWrapper">
-    <div id="table" class="cards table"></div>
-    <!-- внутри <section id="game"> -->
-    <div id="pairOverlay" class="hidden">
-      <div class="pairContent">
-    
-        <!-- 1. надпись с именем игрока -->
-        <div id="pairInfo" class="pairInfo"></div>
-    
-        <!-- 2. сами две большие карточки -->
-        <div class="pairBox">
-          <div id="pairYes" class="card large"></div>
-          <div id="pairNo" class="card large"></div>
-        </div>
-    
-        <!-- 3. текст «Успех» / «Провал» под карточками -->
-        <div id="pairResult" class="pairResult"></div>
-    
-      </div>
+    <div class="controls">
+      <button id="playBtn" class="btn green">Выложить левую</button>
+      <button id="pairBtn" class="btn amber">Составить пару</button>
     </div>
-    <div id="countdownOverlay" class="hidden"></div>
-  </div>
-  <p id="deckLeft" class="deckCnt"></p>
-</section>
 
-<div id="toastArea"></div>
+    <h3 class="subtitle">Ваша рука</h3>
+    <div id="hand" class="cards"></div>
 
-<script src="/socket.io/socket.io.js"></script>
-<script type="module" src="app.js"></script>
+    <h3 class="subtitle">Стол</h3>
+    <div id="tableWrapper" class="tableWrapper">
+      <div id="table" class="cards table"></div>
+      <!-- внутри <section id="game"> -->
+      <div id="pairOverlay" class="hidden">
+        <div class="pairContent">
+
+          <!-- 1. надпись с именем игрока -->
+          <div id="pairInfo" class="pairInfo"></div>
+
+          <!-- 2. сами две большие карточки -->
+          <div class="pairBox">
+            <div id="pairYes" class="card large"></div>
+            <div id="pairNo" class="card large"></div>
+          </div>
+
+          <!-- 3. текст «Успех» / «Провал» под карточками -->
+          <div id="pairResult" class="pairResult"></div>
+
+        </div>
+      </div>
+      <div id="countdownOverlay" class="hidden"></div>
+    </div>
+    <p id="deckLeft" class="deckCnt"></p>
+  </section>
+
+  <div id="toastArea"></div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script type="module" src="app.js"></script>
 </body>
+
 </html>
