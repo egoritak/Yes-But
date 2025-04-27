@@ -42,6 +42,24 @@ const pairResultEl = document.getElementById('pairResult');
 
 let room='', myName='', myId='', active='', names={}, selecting=[];
 
+const q = new URLSearchParams(location.search).get('room');
+if (q && /^[A-Z0-9]{4}$/.test(q.toUpperCase())) {
+  codeIn.value = q.toUpperCase();
+}
+
+// ---- QR helpers ----
+function roomUrl(code){
+  return `${location.origin}?room=${code}`;
+}
+function showQR(code){
+  const qr = $('qrImg');
+  if(!qr) return;
+  const url = roomUrl(code);
+  // берём готовую картинку с публичного API (200×200 px)
+  qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(url)}`;
+  $('qrBox').classList.remove('hidden');
+}
+
 /* ───── validators ───── */
 const nameOK = () => userName.value.trim().length > 0;
 const codeOK = () => /^[A-Z0-9]{4}$/.test(codeIn.value.trim().toUpperCase());
@@ -103,6 +121,9 @@ s.on('room_created',({code})=>{
   landing.classList.add('hidden');
   lobby.classList.remove('hidden');
   roomTxt.textContent = code;
+
+  showQR(code);
+
   copyBt.onclick = () => {
     navigator.clipboard.writeText(code);
     toast('Код скопирован');
@@ -119,6 +140,7 @@ s.on('lobby_state',({players,adminId})=>{
   landing.classList.add('hidden');
   lobby.classList.remove('hidden');
   roomTxt.textContent = room;
+  showQR(room);
   copyBt.onclick = () => { navigator.clipboard.writeText(room); toast('Код скопирован'); };
 });
 
