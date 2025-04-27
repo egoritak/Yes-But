@@ -1,0 +1,9 @@
+body{font-family:system-ui,sans-serif;text-align:center;margin:0;background:#fafafa}
+h1{margin:.7rem 0}
+#hand,#table{display:flex;flex-wrap:wrap;justify-content:center;gap:.4rem;margin:.5rem 0}
+.card{min-width:9rem;padding:.5rem .8rem;border:1px solid #444;border-radius:8px;background:#fff;cursor:pointer;user-select:none;transition:transform .12s}
+.card:hover{transform:scale(1.05)}
+.YES{background:#e6f8e3}
+.NO {background:#fde8e8}
+.taken{opacity:.35;pointer-events:none}
+button{margin:.3rem;padding:.4rem .9rem;font-size:1rem}

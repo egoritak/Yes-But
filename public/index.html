@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Да/Но – игра</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h1>Игра «Да / Но»</h1>
+
+<!-- экран подключения -->
+<div id="join">
+  <input id="room" placeholder="компания / room">
+  <input id="name" placeholder="ваше имя">
+  <button id="joinBtn">Войти</button>
+</div>
+
+<!-- игровой экран -->
+<div id="game" hidden>
+  <p id="info"></p>
+  <div id="hand"></div>
+  <button id="playBtn">Выложить левую</button>
+  <button id="pairBtn">Составить пару</button>
+
+  <h3>Стол</h3>
+  <div id="table"></div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
