@@ -328,54 +328,91 @@ h3.subtitle {
 #pairOverlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.75);
+    background: rgba(0, 0, 0, 0.75);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 50;
-  }
-  #pairOverlay.hidden { display: none !important; }
+}
 
-  /* подпись над карточками */
+#pairOverlay.hidden {
+    display: none !important;
+}
+
+/* подпись над карточками */
 .pairInfo {
-    font-size: clamp(1.2rem,3vw,1.8rem);
+    font-size: clamp(1.2rem, 3vw, 1.8rem);
     font-weight: 600;
     color: #fff;
     text-align: center;
-  }
+}
 
-  /* внутренняя обёртка, чтоб не растягивалось на весь экран */
+/* внутренняя обёртка, чтоб не растягивалось на весь экран */
 .pairContent {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: clamp(0.8rem,2vw,1.2rem);
-  }
-  
+    gap: clamp(0.8rem, 2vw, 1.2rem);
+}
+
 
 /* контейнер для двух карточек */
 .pairBox {
     display: flex;
-    gap: clamp(1rem,2.5vw,2rem);
-  }
-  
+    gap: clamp(1rem, 2.5vw, 2rem);
+}
+
 
 /* карточки увеличены, рамки уже цветятся по YES/NO */
 .card.large {
-    width: clamp(120px,16vw,260px);
-    height: clamp(180px,24vw,360px);
+    width: clamp(120px, 16vw, 260px);
+    height: clamp(180px, 24vw, 360px);
     border-width: 6px !important;
-  }
+}
 
 /* текст результата под карточками */
 .pairResult {
-    font-size: clamp(1.5rem,4vw,2.4rem);
+    font-size: clamp(1.5rem, 4vw, 2.4rem);
     font-weight: bold;
     text-align: center;
     color: var(--c-txt);
-  }
+}
 
+#qrBox {
+    display: flex;
+    /* центровка содержимого */
+    flex-direction: column;
+    align-items: center;
+    gap: 0.6rem;
 
+    animation: fadeOut .5s;
+}
+
+#qrBox p {
+    font-size: clamp(.95rem, 1.1vw, 1.1rem);
+    font-weight: 600;
+    text-align: center;
+}
+
+#qrImg {
+    width: 180px;
+    height: 180px;
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: 0 2px 8px rgb(0 0 0 / .1);
+    transition: transform .15s;
+}
+
+#qrImg:hover {
+    transform: scale(1.03);
+}
+
+@media (prefers-color-scheme: dark) {
+    #qrBox {
+        background: var(--c-card-dark);
+        border-color: #475569;
+    }
+}
 
 @keyframes slideIn {
     from {
