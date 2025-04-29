@@ -15,6 +15,16 @@ app.use(express.static('public'));
 
 const YES = 'YES', NO = 'NO';
 
+const cardsDir = path.join(__dirname, 'public', 'cards');
+app.get('/cards/manifest.json', (req, res) => {
+  fs.readdir(cardsDir, (err, files) => {
+    if (err) return res.status(500).json({ error: 'Cannot list card files' });
+    // Оставляем только изображения
+    const imgs = files.filter(f => /\.(png|jpe?g|webp)$/i.test(f));
+    res.json(imgs);
+  });
+});
+
 /* ── вспомогательные ── */
 const genCode = () => crypto.randomBytes(2).toString('hex').toUpperCase();
 const shuffle = a => {
