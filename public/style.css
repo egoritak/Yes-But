@@ -119,10 +119,3 @@
   /* ── Large-desktop tweaks (≥1600px) ───────────────────── */
   @media(min-width:1600px){
     .card{width:clamp(120px,9vw,220px);height:clamp(180px,14vw,320px);} .card.large{width:clamp(140px,11vw,300px);height:clamp(210px,17vw,450px);} }
-  
-    body.preloading * { pointer-events: none; opacity: .5; }
-  #loadingOverlay {
-    position:fixed; inset:0;
-    display:flex; align-items:center; justify-content:center;
-    background:rgba(255,255,255,.9); font-size:1.5rem;
-  }
