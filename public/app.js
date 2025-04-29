@@ -1,83 +1,118 @@
-// public/app.js
 /* ───── toast ───── */
 function toast(msg, color = '#334155') {
   const area = document.getElementById('toastArea');
   const el   = document.createElement('div');
-  el.className     = 'toast';
+  el.className = 'toast';
   el.style.background = color;
-  el.textContent   = msg;
+  el.textContent = msg;
   area.appendChild(el);
   setTimeout(() => el.remove(), 2500);
 }
 
-/* ─── фоновая под-загрузка картинок ─────────────────────── */
+/* ─── фоновая под-загрузка картинок ───────────────────── */
 async function preloadCards(concurrency = 3) {
   try {
     const res = await fetch('/cards/manifest.json');
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const files = await res.json();
 
-    let index = 0;
+    let idx = 0;
     function loadNext() {
-      if (index >= files.length) return;
+      if (idx >= files.length) return;
       const img = new Image();
-      img.onload  = img.onerror = loadNext;      // когда текущая закончится — грузим следующую
+      img.onload = img.onerror = loadNext;
       img.decoding = 'async';
-      img.src = `/cards/${files[index++]}`;
+      img.src = `/cards/${files[idx++]}`;
     }
-    // стартуем первые N потоков
     for (let i = 0; i < concurrency; i++) loadNext();
-
-    console.log(`🔄 Card preloading started (${files.length} files, ${concurrency} at once)`);
+    console.log(`🔄 Preloading ${files.length} cards (${concurrency} at once)…`);
   } catch (e) {
     console.error('preloadCards:', e);
   }
 }
 
-/* ─── основной код приложения ───────────────────────────── */
+/* ─── Инициализация приложения ────────────────────────── */
 function initApp() {
   const $ = id => document.getElementById(id);
-  const s = io();                        // Socket.IO сразу!
+  const s = io();
 
-  /* --- DOM & state (без изменений) ------------------------------------- */
-  const landing = $('landing'), lobby = $('lobby'), gameSec = $('game');
-  const userName = $('userName'), codeIn = $('codeInput');
-  const createBt = $('createBtn'), joinBt = $('joinBtn');
-  const roomTxt = $('roomCode'), copyBt = $('copyBtn'), listUL = $('playersList');
-  const startBt = $('startBtn'), bar = $('playersBar'), infoP = $('info');
-  const handDiv = $('hand'), tableDiv = $('table'), playBt = $('playBtn'), pairBt = $('pairBtn');
-  const pairOverlay = $('pairOverlay'), pairYesEl = $('pairYes'), pairNoEl = $('pairNo'), pairResultEl = $('pairResult');
+  /* ───── DOM & state ───── */
+  const landing = $('landing');
+  const lobby   = $('lobby');
+  const gameSec = $('game');
+
+  const userName = $('userName');
+  const codeIn   = $('codeInput');
+  const createBt = $('createBtn');
+  const joinBt   = $('joinBtn');
+
+  const roomTxt = $('roomCode');
+  const copyBt  = $('copyBtn');
+  const listUL  = $('playersList');
+  const startBt = $('startBtn');
+
+  const bar       = $('playersBar');
+  const infoP     = $('info');
+  const handDiv   = $('hand');
+  const tableDiv  = $('table');
+  const playBt    = $('playBtn');
+  const pairBt    = $('pairBtn');
+
+  const pairOverlay  = $('pairOverlay');
+  const pairYesEl    = $('pairYes');
+  const pairNoEl     = $('pairNo');
+  const pairResultEl = $('pairResult');
+
   const overlay = $('countdownOverlay');
+  let countdownInterval = null;
 
   let room = '', myName = '', myId = '', active = '', names = {}, selecting = [];
 
-  /* --- URL-параметр room ------------------------------------------------ */
+  /* ───── URL-параметр room ───── */
   const q = new URLSearchParams(location.search).get('room');
-  if (q && /^[A-Z0-9]{4}$/.test(q)) codeIn.value = q.toUpperCase();
-
-  /* ---- QR helpers ---------------------------------------------------- */
-  function roomUrl(code) {
-    return `${location.origin}?room=${code}`;
+  if (q && /^[A-Z0-9]{4}$/.test(q.toUpperCase())) {
+    codeIn.value = q.toUpperCase();
   }
+
+  /* ───── QR helpers ───── */
+  function roomUrl(code) { return `${location.origin}?room=${code}`; }
   function showQR(code) {
     const qr = $('qrImg');
     if (!qr) return;
-    qr.src =
-      `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(roomUrl(code))}`;
+    qr.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(roomUrl(code))}`;
     $('qrBox').classList.remove('hidden');
-}
+  }
 
-  /* --- helpers ---------------------------------------------------------- */
+  /* ───── clipboard helper ───── */
+  function copyText(text) {
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(text)
+        .then(() => toast('Код скопирован'))
+        .catch(() => legacyCopy(text));
+    } else legacyCopy(text);
+
+    function legacyCopy(t) {
+      const tmp = document.createElement('input');
+      tmp.value = t;
+      document.body.appendChild(tmp);
+      tmp.select();
+      document.execCommand('copy');
+      tmp.remove();
+      toast('Код скопирован');
+    }
+  }
+
+  /* ───── validators ───── */
   const nameOK = () => userName.value.trim().length > 0;
-  const codeOK = () => /^[A-Z0-9]{4}$/.test(codeIn.value.trim());
+  const codeOK = () => /^[A-Z0-9]{4}$/.test(codeIn.value.trim().toUpperCase());
   function updateBtns() {
     createBt.disabled = !nameOK();
     joinBt.disabled   = !(nameOK() && codeOK());
   }
 
-  /* --- Landing ---------------------------------------------------------- */
+  /* ───── landing actions ───── */
   userName.oninput = updateBtns;
-  codeIn.oninput   = () => { codeIn.value = codeIn.value.toUpperCase(); updateBtns(); };
+  codeIn.oninput = () => { codeIn.value = codeIn.value.toUpperCase(); updateBtns(); };
 
   createBt.onclick = () => {
     myName = userName.value.trim();
@@ -88,41 +123,37 @@ function initApp() {
     room   = codeIn.value.trim().toUpperCase();
     if (!codeOK()) { toast('Код из 4 символов'); return; }
     s.emit('join_room', { code: room, name: myName });
+    joinBt.disabled = true;                    // чтобы не спамили
   };
 
-  /* --- Socket.IO события (без изменений логики) ------------------------ */
+  /* ───── socket.io handlers ───── */
   s.on('room_created', ({ code }) => {
     room = code;
     landing.classList.add('hidden');
     lobby.classList.remove('hidden');
     roomTxt.textContent = code;
-    copyBt.onclick = () => navigator.clipboard.writeText(code).then(() => toast('Код скопирован'));
     showQR(code);
-    startBt.classList.remove('hidden');
+    copyBt.onclick = () => copyText(code);
+    startBt.classList.remove('hidden');        // я — админ
   });
 
   s.on('lobby_state', ({ players, adminId }) => {
     listUL.innerHTML = players.map(n => `<li>${n}</li>`).join('');
     startBt.classList.toggle('hidden', adminId !== s.id);
 
-    /* гость впервые вошёл → переключаемся на экран лобби */
-    if (landing.classList.contains('hidden') || room === '') {
-      // админ уже в лобби, ничего не делаем
-    } else {
+    /* гость впервые вошёл → показать лобби */
+    if (!landing.classList.contains('hidden')) {
       landing.classList.add('hidden');
       lobby.classList.remove('hidden');
       roomTxt.textContent = room;
-      showQR(room);                           // ← правильная переменная
-      copyBt.onclick = () =>
-        navigator.clipboard.writeText(room).then(() => toast('Код скопирован'));
-
-      /* чтобы гость не мог повторно кликать «Подключиться» */
-      joinBt.disabled = true;
+      showQR(room);
+      copyBt.onclick = () => copyText(room);
     }
   });
 
   startBt.onclick = () => s.emit('start_game', { code: room });
 
+  /* ───── gameplay events ───── */
   s.on('state', st => {
     lobby.classList.add('hidden');
     gameSec.classList.remove('hidden');
@@ -143,14 +174,16 @@ function initApp() {
       : 'Ожидаем начала партии…';
 
     /* стол */
-    tableDiv.innerHTML = st.table.map(c => cardHTML(c, { hidden: c.text === '???', showTaken: true })).join('');
+    tableDiv.innerHTML = st.table
+      .map(c => cardHTML(c, { hidden: c.text === '???', showTaken: true }))
+      .join('');
     tableDiv.querySelectorAll('.card').forEach(el => {
       el.onclick = () => s.emit('claim_card', { code: room, cardId: el.dataset.id });
     });
 
     $('deckLeft').textContent = `В колоде – ${st.left} карт`;
 
-    const myTurn   = active === myId;
+    const myTurn    = active === myId;
     const tableFull = st.table.length >= st.players.length;
     playBt.disabled = !myTurn || st.revealed || tableFull;
     pairBt.disabled = playBt.disabled;
@@ -164,27 +197,61 @@ function initApp() {
     });
   });
 
-  /* --- пара/тосты/прочее (оставлено без изменений) --------------------- */
+  /* ───── пара / тосты / обратный отсчёт ───── */
+  s.on('start_countdown', ({ seconds }) => {
+    overlay.textContent = seconds;
+    overlay.classList.remove('hidden');
+
+    clearInterval(countdownInterval);
+    let t = seconds;
+    countdownInterval = setInterval(() => {
+      t--;
+      if (t > 0) overlay.textContent = t;
+      else {
+        clearInterval(countdownInterval);
+        overlay.classList.add('hidden');
+      }
+    }, 1000);                                // как в оригинале
+  });
+
+  s.on('reveal', () => {
+    clearInterval(countdownInterval);
+    overlay.classList.add('hidden');
+    toast('Карты вскрыты', '#0ea5e9');
+  });
+
   s.on('pair_reveal', ({ yes, no }) => {
     pairYesEl.innerHTML = `<img src="/cards/${yes.file}" alt="">`;
     pairNoEl.innerHTML  = `<img src="/cards/${no.file}"  alt="">`;
-    pairOverlay.classList.remove('hidden');
     pairResultEl.textContent = '';
+    pairOverlay.classList.remove('hidden');
   });
+
   s.on('pair_success', ({ byName, score }) => {
     pairResultEl.textContent = 'Успех!';
     pairResultEl.style.color = 'var(--c-green)';
     setTimeout(() => { pairOverlay.classList.add('hidden'); }, 1800);
-    toast(`${byName}: пара (${score})`, '#22c55e');
+    toast(`${byName} правильно составил пару! (${score})`, '#22c55e');
   });
-  s.on('pair_fail',   ({ byName }) => {
+
+  s.on('pair_fail', ({ byName }) => {
     pairResultEl.textContent = 'Провал!';
     pairResultEl.style.color = 'var(--c-red)';
     setTimeout(() => { pairOverlay.classList.add('hidden'); }, 1800);
     toast(`${byName} ошибся с парой`, '#ef4444');
   });
 
-  /* --- действия --------------------------------------------------------- */
+  /* ───── прочие уведомления ───── */
+  s.on('card_claimed', ({ cardId, byName }) => {
+    const el = tableDiv.querySelector(`[data-id="${cardId}"]`);
+    if (el) el.classList.add('taken');
+    toast(`${byName} забрал карту`);
+  });
+  s.on('pair_attempt', ({ byName }) => toast(`${byName} пытается составить пару…`, '#f59e0b'));
+  s.on('game_over', ({ winnerName }) => toast(`${winnerName} победил! Новая партия…`, '#6366f1'));
+  s.on('error_msg', msg => toast(msg, '#ef4444'));
+
+  /* ───── действия ───── */
   playBt.onclick = () => { clearSel(); s.emit('play_card', { code: room }); };
   pairBt.onclick = () => toast('Выберите «Да» и «Но» в руке', '#f59e0b');
 
@@ -207,6 +274,7 @@ function initApp() {
     selecting = [];
   }
 
+  /* ───── карточка ───── */
   function cardHTML(c, { hidden = false, showTaken = true } = {}) {
     const takenCls = showTaken && c.taken ? ' taken' : '';
     const faceCls  = hidden ? ' face-down' : '';
@@ -219,6 +287,6 @@ function initApp() {
 
 /* ─── Старт: UI сразу, картинки в фоне ─────────────────── */
 document.addEventListener('DOMContentLoaded', () => {
-  initApp();              // 1) поднимаем сокет и всю логику
-  setTimeout(preloadCards, 1000); // 2) через секунду начинаем фон-загрузку
+  initApp();                      // UI + Socket.IO
+  setTimeout(preloadCards, 1000); // через секунду — фоновый preload
 });
