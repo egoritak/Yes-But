@@ -71,6 +71,12 @@ function initApp() {
   const winnerNameEl = $('winnerName');
   const continueBtn = $('continueBtn');
 
+  const collectionOverlay = $('collectionOverlay');
+  const collectionTitle = $('collectionTitle');
+  const pairsGrid = $('pairsGrid');
+  const collected = {};      // {playerId: [ {yes,no} , … ]}
+
+
   let room = '', myName = '', myId = '', active = '', names = {}, selecting = [];
   let adminId = '';    // кто нажимает «Продолжить»
 
@@ -183,10 +189,35 @@ function initApp() {
 
     /* players bar */
     bar.innerHTML = st.players.map(p => `
-      <div class="playerBox">
-        <div class="avatar ${p.id === active ? 'turn' : ''}">${p.name[0]}</div>
-        <div>${p.name}</div><div>${p.score} пар</div>
-      </div>`).join('');
+         <div class="playerBox" data-id="${p.id}">
+           <div class="avatar ${p.id === active ? 'turn' : ''}">${p.name[0]}</div>
+           <div>${p.name}</div>
+           <div>${p.score} пар</div>
+         </div>
+      `).join('');
+
+    bar.onclick = e => {
+      const box = e.target.closest('.playerBox');
+      if (!box) return;
+
+      const pid = box.dataset.id;
+      const pairs = collected[pid] || [];
+      if (!pairs.length) return;                    // ещё ничего не собрал
+
+      const playerName = box.children[1].textContent;
+      collectionTitle.textContent = `${playerName} — собранные пары`;
+
+      pairsGrid.innerHTML = pairs.map(p => `
+          <div class="pairItem">
+            <div class="card large YES"><img src="/cards/${p.yes.file}" alt=""></div>
+            <div class="card large NO"><img  src="/cards/${p.no.file}"  alt=""></div>
+          </div>`).join('');
+
+      collectionOverlay.classList.remove('hidden');
+    };
+
+    collectionOverlay.onclick = () => collectionOverlay.classList.add('hidden');
+
 
     infoP.textContent = active
       ? (active === myId ? 'Ваш ход' : `Ход ${names[active]}`)
@@ -247,11 +278,15 @@ function initApp() {
     pairOverlay.classList.remove('hidden');
   });
 
-  s.on('pair_success', ({ byName, score }) => {
+  s.on('pair_success', ({ byName, playerId, score, yes, no }) => {
     pairResultEl.textContent = 'Успех!';
     pairResultEl.style.color = 'var(--c-green)';
     setTimeout(() => { pairOverlay.classList.add('hidden'); }, 1800);
     toast(`${byName} правильно составил пару! (${score})`, '#22c55e');
+
+    collected[playerId] = collected[playerId] || [];
+    collected[playerId].push({ yes, no });
+
   });
 
   s.on('pair_fail', ({ byName }) => {

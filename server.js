@@ -273,7 +273,13 @@ io.on('connection', sock => {
       if (yes.pair === no.pair) {
         pl.score++;
         g.removed.add(yes.id); g.removed.add(no.id);
-        g.room().emit('pair_success', { byName: pl.name, score: pl.score });
+        g.room().emit('pair_success', {
+          byName : pl.name,
+          playerId: pl.id,       // ← кому принадлежит пара
+          score  : pl.score,
+          yes,                    // обе карты
+          no
+        });
         if (pl.score >= 3) {
           g.started = false;                // партия окончена, ставим игру «на паузу»
           g.room().emit('game_over', {
