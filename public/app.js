@@ -66,7 +66,13 @@ function initApp() {
   const overlay = $('countdownOverlay');
   let countdownInterval = null;
 
+  const gameOver = $('gameOverOverlay');
+  const winnerAvatar = $('winnerAvatar');
+  const winnerNameEl = $('winnerName');
+  const continueBtn = $('continueBtn');
+
   let room = '', myName = '', myId = '', active = '', names = {}, selecting = [];
+  let adminId = '';    // кто нажимает «Продолжить»
 
   /* ───── URL-параметр room ───── */
   const q = new URLSearchParams(location.search).get('room');
@@ -137,7 +143,8 @@ function initApp() {
     startBt.classList.remove('hidden');        // я — админ
   });
 
-  s.on('lobby_state', ({ players, adminId }) => {
+  s.on('lobby_state', ({ players, adminId: adm }) => {
+    adminId = adm;
     listUL.innerHTML = players.map(n => `<li>${n}</li>`).join('');
     startBt.classList.toggle('hidden', adminId !== s.id);
 
@@ -152,6 +159,18 @@ function initApp() {
   });
 
   startBt.onclick = () => s.emit('start_game', { code: room });
+
+  /* === ЭКРАН ПОБЕДЫ === */
+  s.on('game_over', ({ winnerName, winnerId, adminId: adm }) => {
+    adminId = adm ?? adminId;
+    // буква аватара = первая буква имени
+    winnerAvatar.textContent = (names[winnerId] || winnerName)[0];
+    winnerNameEl.textContent = winnerName;
+    continueBtn.classList.toggle('hidden', s.id !== adminId); // кнопку видит только админ
+    gameOver.classList.remove('hidden');
+  });
+
+  continueBtn.onclick = () => s.emit('continue_game', { code: room });
 
   /* ───── gameplay events ───── */
   s.on('state', st => {
@@ -188,6 +207,7 @@ function initApp() {
     playBt.disabled = !myTurn || st.revealed || tableFull;
     pairBt.disabled = playBt.disabled;
     if (!myTurn) clearSel();
+    if (!gameOver.classList.contains('hidden')) gameOver.classList.add('hidden');
   });
 
   s.on('hand', cards => {

@@ -275,8 +275,12 @@ io.on('connection', sock => {
         g.removed.add(yes.id); g.removed.add(no.id);
         g.room().emit('pair_success', { byName: pl.name, score: pl.score });
         if (pl.score >= 3) {
-          g.room().emit('game_over', { winnerName: pl.name });
-          g.resetParty();
+          g.started = false;                // партия окончена, ставим игру «на паузу»
+          g.room().emit('game_over', {
+            winnerName: pl.name,
+            winnerId: pl.id,
+            adminId: g.admin          // кто должен нажать «Продолжить»
+          });
           return;
         }
       } else {
@@ -290,6 +294,13 @@ io.on('connection', sock => {
       else g.emitState();
     }, 1000);
   });
+
+  sock.on('continue_game', ({ code }) => {
+    const g = rooms.get(code);
+    if (!g || g.started || g.admin !== sock.id) return;   // только админ и только в паузе
+    g.started = true;            // снова играем
+    g.resetParty();              // формирует новую колоду, раздаёт карты и emitState()
+  });  
 
   /* ---- disconnect ---- */
   sock.on('disconnect', () => {

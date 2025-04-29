@@ -449,3 +449,47 @@ h3.subtitle,
         height: clamp(210px, 17vw, 450px);
     }
 }
+
+/* ── Game-over overlay ─────────────────────────────── */
+#gameOverOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, .8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 70;
+}
+
+#gameOverOverlay.hidden {
+    display: none !important;
+}
+
+.gameOverContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.2rem;
+    color: #fff;
+    text-align: center;
+}
+
+.avatar.big {
+    width: 120px;
+    height: 120px;
+    font-size: 3rem;
+}
+
+.winnerName {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.winnerMsg {
+    font-size: 1.4rem;
+}
+
+#continueBtn {
+    padding: .8em 1.6em;
+    font-size: 1.1rem;
+}
