@@ -55,6 +55,18 @@ function initApp() {
   const q = new URLSearchParams(location.search).get('room');
   if (q && /^[A-Z0-9]{4}$/.test(q)) codeIn.value = q.toUpperCase();
 
+  /* ---- QR helpers ---------------------------------------------------- */
+  function roomUrl(code) {
+    return `${location.origin}?room=${code}`;
+  }
+  function showQR(code) {
+    const qr = $('qrImg');
+    if (!qr) return;
+    qr.src =
+      `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(roomUrl(code))}`;
+    $('qrBox').classList.remove('hidden');
+}
+
   /* --- helpers ---------------------------------------------------------- */
   const nameOK = () => userName.value.trim().length > 0;
   const codeOK = () => /^[A-Z0-9]{4}$/.test(codeIn.value.trim());
@@ -85,12 +97,28 @@ function initApp() {
     lobby.classList.remove('hidden');
     roomTxt.textContent = code;
     copyBt.onclick = () => navigator.clipboard.writeText(code).then(() => toast('Код скопирован'));
+    showQR(code);
     startBt.classList.remove('hidden');
   });
 
   s.on('lobby_state', ({ players, adminId }) => {
     listUL.innerHTML = players.map(n => `<li>${n}</li>`).join('');
     startBt.classList.toggle('hidden', adminId !== s.id);
+
+    /* гость впервые вошёл → переключаемся на экран лобби */
+    if (landing.classList.contains('hidden') || room === '') {
+      // админ уже в лобби, ничего не делаем
+    } else {
+      landing.classList.add('hidden');
+      lobby.classList.remove('hidden');
+      roomTxt.textContent = room;
+      showQR(room);                           // ← правильная переменная
+      copyBt.onclick = () =>
+        navigator.clipboard.writeText(room).then(() => toast('Код скопирован'));
+
+      /* чтобы гость не мог повторно кликать «Подключиться» */
+      joinBt.disabled = true;
+    }
   });
 
   startBt.onclick = () => s.emit('start_game', { code: room });
