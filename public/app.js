@@ -1,7 +1,7 @@
 /* ───── toast ───── */
 function toast(msg, color = '#334155') {
   const area = document.getElementById('toastArea');
-  const el   = document.createElement('div');
+  const el = document.createElement('div');
   el.className = 'toast';
   el.style.background = color;
   el.textContent = msg;
@@ -38,29 +38,29 @@ function initApp() {
 
   /* ───── DOM & state ───── */
   const landing = $('landing');
-  const lobby   = $('lobby');
+  const lobby = $('lobby');
   const gameSec = $('game');
 
   const userName = $('userName');
-  const codeIn   = $('codeInput');
+  const codeIn = $('codeInput');
   const createBt = $('createBtn');
-  const joinBt   = $('joinBtn');
+  const joinBt = $('joinBtn');
 
   const roomTxt = $('roomCode');
-  const copyBt  = $('copyBtn');
-  const listUL  = $('playersList');
+  const copyBt = $('copyBtn');
+  const listUL = $('playersList');
   const startBt = $('startBtn');
 
-  const bar       = $('playersBar');
-  const infoP     = $('info');
-  const handDiv   = $('hand');
-  const tableDiv  = $('table');
-  const playBt    = $('playBtn');
-  const pairBt    = $('pairBtn');
+  const bar = $('playersBar');
+  const infoP = $('info');
+  const handDiv = $('hand');
+  const tableDiv = $('table');
+  const playBt = $('playBtn');
+  const pairBt = $('pairBtn');
 
-  const pairOverlay  = $('pairOverlay');
-  const pairYesEl    = $('pairYes');
-  const pairNoEl     = $('pairNo');
+  const pairOverlay = $('pairOverlay');
+  const pairYesEl = $('pairYes');
+  const pairNoEl = $('pairNo');
   const pairResultEl = $('pairResult');
 
   const overlay = $('countdownOverlay');
@@ -107,7 +107,7 @@ function initApp() {
   const codeOK = () => /^[A-Z0-9]{4}$/.test(codeIn.value.trim().toUpperCase());
   function updateBtns() {
     createBt.disabled = !nameOK();
-    joinBt.disabled   = !(nameOK() && codeOK());
+    joinBt.disabled = !(nameOK() && codeOK());
   }
 
   /* ───── landing actions ───── */
@@ -120,7 +120,7 @@ function initApp() {
   };
   joinBt.onclick = () => {
     myName = userName.value.trim();
-    room   = codeIn.value.trim().toUpperCase();
+    room = codeIn.value.trim().toUpperCase();
     if (!codeOK()) { toast('Код из 4 символов'); return; }
     s.emit('join_room', { code: room, name: myName });
     joinBt.disabled = true;                    // чтобы не спамили
@@ -160,7 +160,7 @@ function initApp() {
 
     myId ||= s.id;
     active = st.active;
-    names  = Object.fromEntries(st.players.map(p => [p.id, p.name]));
+    names = Object.fromEntries(st.players.map(p => [p.id, p.name]));
 
     /* players bar */
     bar.innerHTML = st.players.map(p => `
@@ -183,7 +183,7 @@ function initApp() {
 
     $('deckLeft').textContent = `В колоде – ${st.left} карт`;
 
-    const myTurn    = active === myId;
+    const myTurn = active === myId;
     const tableFull = st.table.length >= st.players.length;
     playBt.disabled = !myTurn || st.revealed || tableFull;
     pairBt.disabled = playBt.disabled;
@@ -222,7 +222,7 @@ function initApp() {
 
   s.on('pair_reveal', ({ yes, no }) => {
     pairYesEl.innerHTML = `<img src="/cards/${yes.file}" alt="">`;
-    pairNoEl.innerHTML  = `<img src="/cards/${no.file}"  alt="">`;
+    pairNoEl.innerHTML = `<img src="/cards/${no.file}"  alt="">`;
     pairResultEl.textContent = '';
     pairOverlay.classList.remove('hidden');
   });
@@ -277,8 +277,8 @@ function initApp() {
   /* ───── карточка ───── */
   function cardHTML(c, { hidden = false, showTaken = true } = {}) {
     const takenCls = showTaken && c.taken ? ' taken' : '';
-    const faceCls  = hidden ? ' face-down' : '';
-    const inner    = hidden ? '???' : `<img src="/cards/${c.file}" alt="">`;
+    const faceCls = hidden ? ' face-down' : '';
+    const inner = hidden ? '???' : `<img src="/cards/${c.file}" alt="">`;
     return `<div class="card ${c.type}${takenCls}${faceCls}" data-id="${c.id}">${inner}</div>`;
   }
 
