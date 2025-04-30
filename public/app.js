@@ -318,7 +318,7 @@ function initApp() {
 
   s.on('final_round', ({ initiator }) => {
     toast(`${initiator} набрал 3 пары! Финальный круг!`, '#f59e0b');
-    playBt.textContent = 'Спасовать';
+    playBt.textContent = 'Передать ход';
   });
 
   s.on('game_over_final', ({ winners, adminId: adm }) => {
@@ -373,7 +373,7 @@ function initApp() {
 
   /* ───── действия ───── */
   playBt.onclick = () => {
-    if (playBtn.textContent === 'Спасовать') {
+    if (playBtn.textContent === 'Передать ход') {
       s.emit('pass_turn', { code: room });
     } else {
       clearSel(); 
