@@ -172,7 +172,7 @@ body {
     flex-wrap: wrap;
     justify-content: center;
     gap: .7rem;
-    overflow-x: hidden;
+    overflow-x: visible;
     padding: .6rem 0 .5rem;
     border-top: 2px solid var(--c-border);
 }
@@ -259,6 +259,7 @@ body {
     max-height: 100%;
     min-height: clamp(150px, 17vw, 260px);
     overflow-y: auto;
+    overflow-x: visible;
     padding: .7rem;
     gap: .7rem;
     background: #ffffff0d;
@@ -498,43 +499,77 @@ h3.subtitle,
 #collectionOverlay {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,.8);
+    background: rgba(0, 0, 0, .8);
     display: flex;
     align-items: center;
     justify-content: center;
     z-index: 60;
 }
-#collectionOverlay.hidden { display:none!important; }
 
-.collectionContent{
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap:1.4rem;
-    max-width:90vw;
-    max-height:90vh;
-    overflow:auto;
+#collectionOverlay.hidden {
+    display: none !important;
 }
-#collectionTitle{
-    color:#fff;
-    font-size:clamp(1.4rem,3.6vw,2.2rem);
-    text-align:center;
+
+.collectionContent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1.4rem;
+    max-width: 90vw;
+    max-height: 90vh;
+    overflow: auto;
 }
-.pairsGrid{
-    display:flex;
-    flex-wrap:wrap;
-    gap:1.2rem;
-    justify-content:center;
+
+#collectionTitle {
+    color: #fff;
+    font-size: clamp(1.4rem, 3.6vw, 2.2rem);
+    text-align: center;
 }
-.pairItem{
-    display:flex;
-    gap:.6rem;
+
+.pairsGrid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.2rem;
+    justify-content: center;
+}
+
+.pairItem {
+    display: flex;
+    gap: .6rem;
 }
 
 /* подсветка выбранной карты: рамка + «подпрыгивание» */
 .card.selected {
-    box-shadow: 0 0 0 3px var(--c-amber);
-    transform: translateY(-5px);
+    position: relative;
+    z-index: 5;
     transition: transform .2s ease, box-shadow .2s ease;
-  }
-  
+    transform: scale(1.08);
+}
+
+.card.selected.YES {
+    border: 4px solid var(--c-green);
+    box-shadow:
+        inset 0 0 0 2px rgba(34, 197, 94, 0.8),
+        0 0 16px rgba(34, 197, 94, 0.6);
+}
+
+.card.selected.YES:hover {
+    transform: scale(1.1);
+    box-shadow:
+        inset 0 0 0 3px rgba(34, 197, 94, 1),
+        0 0 24px rgba(34, 197, 94, 0.8);
+}
+
+.card.selected.NO {
+    border: 4px solid var(--c-red);
+    box-shadow:
+        inset 0 0 0 2px rgba(239, 68, 68, 0.8),
+        0 0 16px rgba(239, 68, 68, 0.6);
+}
+
+.card.selected.NO:hover {
+    transform: scale(1.1);
+    box-shadow:
+        inset 0 0 0 3px rgba(239, 68, 68, 1),
+        0 0 24px rgba(239, 68, 68, 0.8);
+}
