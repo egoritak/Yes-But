@@ -316,6 +316,20 @@ function initApp() {
     }, 1000);                                // как в оригинале
   });
 
+  s.on('final_round', ({ initiator }) => {
+    toast(`${initiator} набрал 3 пары! Финальный круг!`, '#f59e0b');
+    playBt.textContent = 'Спасовать';
+  });
+
+  s.on('game_over_final', ({ winners, adminId: adm }) => {
+    adminId = adm ?? adminId;
+    winnerAvatar.textContent = '🏆';
+    winnerNameEl.textContent = winners.join(', ');
+    continueBtn.classList.toggle('hidden', s.id !== adminId);
+    gameOver.classList.remove('hidden');
+    toast(`Игра окончена! Победители: ${winners.join(', ')}`, '#6366f1');
+  });  
+
   s.on('reveal', () => {
     clearInterval(countdownInterval);
     overlay.classList.add('hidden');
@@ -358,7 +372,14 @@ function initApp() {
   s.on('error_msg', msg => toast(msg, '#ef4444'));
 
   /* ───── действия ───── */
-  playBt.onclick = () => { clearSel(); s.emit('play_card', { code: room }); };
+  playBt.onclick = () => {
+    if (playBtn.textContent === 'Спасовать') {
+      s.emit('pass_turn', { code: room });
+    } else {
+      clearSel(); 
+      s.emit('play_card', { code: room });
+    }
+  };  
 
   /* ───── карточка ───── */
   function cardHTML(c, { hidden = false, showTaken = true } = {}) {

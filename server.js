@@ -73,6 +73,8 @@ class Game {
     this.removed = new Set();
     this.turnIdx = 0; this.table = []; this.revealed = false;
     this.buildDeck();
+    this.finalRound = false;       // флаг последнего круга
+    this.playersPassed = new Set(); // кто уже спасанул в финальном раунде
   }
 
   startRound() {                            // вызываем из 'start_game' и resetParty()
@@ -280,15 +282,25 @@ io.on('connection', sock => {
           yes,                    // обе карты
           no
         });
-        if (pl.score >= 3) {
-          g.started = false;                // партия окончена, ставим игру «на паузу»
-          g.room().emit('game_over', {
-            winnerName: pl.name,
-            winnerId: pl.id,
-            adminId: g.admin          // кто должен нажать «Продолжить»
-          });
-          return;
+        if (pl.score >= 3 && !g.finalRound) {
+          g.finalRound = true;              // активируем последний круг
+          g.playersPassed = new Set();      // обнуляем тех, кто уже спасовал
+          g.room().emit('final_round', { initiator: pl.name });
         }
+        
+        // проверка конца финального круга
+        if (g.finalRound && (pl.score >= 3 || pl.hand.length === 0)) {
+          g.playersPassed.add(pl.id);
+          if (g.playersPassed.size === g.players.length) {
+            g.started = false;  // окончательный конец игры
+            const winners = g.players.filter(p => p.score >= 3).map(p => p.name);
+            g.room().emit('game_over_final', {
+              winners,
+              adminId: g.admin
+            });
+            return;
+          }
+        }        
       } else {
         g.deck.push(yes, no); shuffle(g.deck);
         g.room().emit('pair_fail', { byName: pl.name });
@@ -300,6 +312,27 @@ io.on('connection', sock => {
       else g.emitState();
     }, 1000);
   });
+
+  sock.on('pass_turn', ({ code }) => {
+    const g = rooms.get(code); if (!g || !g.started) return;
+    if (g.players[g.turnIdx].id !== sock.id) return;
+  
+    if (g.finalRound) {
+      g.playersPassed.add(sock.id);
+      if (g.playersPassed.size === g.players.length) {
+        g.started = false;
+        const winners = g.players.filter(p => p.score >= 3).map(p => p.name);
+        g.room().emit('game_over_final', {
+          winners,
+          adminId: g.admin
+        });
+        return;
+      }
+    }
+    
+    g.nextTurn();
+  });
+  
 
   sock.on('continue_game', ({ code }) => {
     const g = rooms.get(code);
