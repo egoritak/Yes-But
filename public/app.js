@@ -56,7 +56,6 @@ function initApp() {
   const handDiv = $('hand');
   const tableDiv = $('table');
   const playBt = $('playBtn');
-  const pairBt = $('pairBtn');
 
   const pairOverlay = $('pairOverlay');
   const pairYesEl = $('pairYes');
@@ -191,7 +190,7 @@ function initApp() {
 
   /* ───── gameplay events ───── */
   s.on('state', st => {
-    lobby.classList.add('hidden');
+    lobby.classList.add('hidden');  
     gameSec.classList.remove('hidden');
 
     myId ||= s.id;
@@ -247,15 +246,56 @@ function initApp() {
     const myTurn = active === myId;
     const tableFull = st.table.length >= st.players.length;
     playBt.disabled = !myTurn || st.revealed || tableFull;
-    pairBt.disabled = playBt.disabled;
     if (!myTurn) clearSel();
     if (!gameOver.classList.contains('hidden')) gameOver.classList.add('hidden');
   });
 
+  // функция для очистки подсветки
+  function clearSel() {
+    selecting.forEach(id => {
+      const card = document.querySelector(`[data-id="${id}"]`);
+      if (card) card.classList.remove('selected');
+    });
+    selecting = [];
+  }
+
+  /* ───── игровая рука ───── */
   s.on('hand', cards => {
-    handDiv.innerHTML = cards.map(c => cardHTML(c, { showTaken: false })).join('');
+    handDiv.innerHTML = cards
+      .map(c => cardHTML(c, { showTaken: false }))
+      .join('');
+
     handDiv.querySelectorAll('.card').forEach(el => {
-      el.onclick = () => choose(el.dataset.id);
+      el.onclick = () => {
+        if (active !== myId) return;       // не ваш ход
+
+        const id = el.dataset.id;
+
+        // если клик по уже выбранной — снятие выделения
+        if (selecting[0] === id) {
+          return clearSel();
+        }
+
+        // первый выбор
+        if (selecting.length === 0) {
+          selecting = [id];
+          el.classList.add('selected');
+          return;
+        }
+
+        // второй выбор → пытаемся сделать пару
+        const first = selecting[0];
+        const isPair = (first.startsWith('Y') && id.startsWith('N'))
+                    || (first.startsWith('N') && id.startsWith('Y'));
+        if (isPair) {
+          const yesId = first.startsWith('Y') ? first : id;
+          const noId  = first.startsWith('N') ? first : id;
+          s.emit('make_pair', { code: room, yesId, noId });
+        }
+
+        // сброс выделения в любом случае
+        clearSel();
+      };
     });
   });
 
@@ -319,26 +359,6 @@ function initApp() {
 
   /* ───── действия ───── */
   playBt.onclick = () => { clearSel(); s.emit('play_card', { code: room }); };
-  pairBt.onclick = () => toast('Выберите «Да» и «Но» в руке', '#f59e0b');
-
-  function choose(id) {
-    if (active !== myId || selecting.includes(id)) return;
-    selecting.push(id);
-    document.querySelector(`[data-id="${id}"]`).style.outline = '3px solid #2563eb';
-    if (selecting.length === 2) {
-      const y = selecting.find(i => i.startsWith('Y'));
-      const n = selecting.find(i => i.startsWith('N'));
-      if (y && n) s.emit('make_pair', { code: room, yesId: y, noId: n });
-      clearSel();
-    }
-  }
-  function clearSel() {
-    selecting.forEach(i => {
-      const el = document.querySelector(`[data-id="${i}"]`);
-      if (el) el.style.outline = '';
-    });
-    selecting = [];
-  }
 
   /* ───── карточка ───── */
   function cardHTML(c, { hidden = false, showTaken = true } = {}) {

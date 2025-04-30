@@ -530,3 +530,11 @@ h3.subtitle,
     display:flex;
     gap:.6rem;
 }
+
+/* подсветка выбранной карты: рамка + «подпрыгивание» */
+.card.selected {
+    box-shadow: 0 0 0 3px var(--c-amber);
+    transform: translateY(-5px);
+    transition: transform .2s ease, box-shadow .2s ease;
+  }
+  
