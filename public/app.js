@@ -176,7 +176,18 @@ function initApp() {
     gameOver.classList.remove('hidden');
   });
 
-  continueBtn.onclick = () => s.emit('continue_game', { code: room });
+    continueBtn.onclick = () => {
+       // Очистить историю собранных пар после рестарта игры
+       Object.keys(collected).forEach(pid => delete collected[pid]);
+       // Запустить новую партию на сервере
+       s.emit('continue_game', { code: room });
+   };
+
+  // Сброс истории при рестарте игры
+  s.on('reset_collected', () => {
+    Object.keys(collected).forEach(pid => delete collected[pid]);
+   });
+
 
   /* ───── gameplay events ───── */
   s.on('state', st => {

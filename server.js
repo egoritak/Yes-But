@@ -306,6 +306,7 @@ io.on('connection', sock => {
     if (!g || g.started || g.admin !== sock.id) return;   // только админ и только в паузе
     g.started = true;            // снова играем
     g.resetParty();              // формирует новую колоду, раздаёт карты и emitState()
+    g.room().emit('reset_collected'); // Сброс истории собранных пар на клиентах
   });  
 
   /* ---- disconnect ---- */
