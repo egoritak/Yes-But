@@ -185,6 +185,7 @@ function initApp() {
   // Сброс истории при рестарте игры
   s.on('reset_collected', () => {
     Object.keys(collected).forEach(pid => delete collected[pid]);
+    playBt.textContent = 'Выложить левую';
    });
 
 

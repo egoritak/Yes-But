@@ -159,6 +159,10 @@ class Game {
   }
 
   resetParty() {
+    // Сбрасываем всю логику финального раунда
+    this.finalRound = false;
+    this.playersPassed = new Set();
+
     this.turnIdx = 0; this.table = []; this.revealed = false; this.removed = new Set();
     this.startRound();
     this.players.forEach(p => { p.hand = []; p.score = 0; p.claimed = false; this.deal(p, 2); });
